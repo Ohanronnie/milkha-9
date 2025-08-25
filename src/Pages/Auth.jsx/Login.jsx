@@ -35,6 +35,7 @@ const Login = () => {
       setErrors(res?.data?.non_field_errors);
     } 
   };
+  
   return (
     <div className="h-[100vh] grid lg:grid-cols-2  ">
       {/* Left Section */}

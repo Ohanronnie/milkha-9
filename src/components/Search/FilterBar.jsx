@@ -4,10 +4,10 @@ import { FaMapMarkerAlt, FaStar, FaHeart, FaChevronDown } from "react-icons/fa";
 export default function FilterBar({ filters, setFilters }) {
   const [selectedFilters, setSelectedFilters] = useState({
     location: false,
-    rating: false,
-    price: false,
-    filters: false,
-    wishlist: false,
+    hobbies: false,
+    age: false,
+    religion: false,
+    marital_status: false,
   });
 
   const [sortBy, setSortBy] = useState("Top matches");
@@ -35,13 +35,12 @@ export default function FilterBar({ filters, setFilters }) {
               onClick={() => toggleFilter("location")}
               icon={<FaMapMarkerAlt className="w-4 h-4" />}
               label="Location"
-              setFilters={setFilters}
-              filters={filters}
             />
 
+            {/* Hobbies */}
             <FilterButton
-              active={selectedFilters.rating}
-              onClick={() => toggleFilter("rating")}
+              active={selectedFilters.hobbies}
+              onClick={() => toggleFilter("hobbies")}
               icon={<FaStar className="w-4 h-4" />}
               label="Hobbies"
               color="purple"
@@ -49,23 +48,23 @@ export default function FilterBar({ filters, setFilters }) {
 
             {/* Age Range */}
             <FilterButton
-              active={selectedFilters.price}
-              onClick={() => toggleFilter("price")}
+              active={selectedFilters.age}
+              onClick={() => toggleFilter("age")}
               label="Age Range"
               color="purple"
             />
 
             {/* Religion */}
             <FilterButton
-              active={selectedFilters.filters}
-              onClick={() => toggleFilter("filters")}
+              active={selectedFilters.religion}
+              onClick={() => toggleFilter("religion")}
               label="Religion"
             />
 
             {/* Marital Status */}
             <FilterButton
-              active={selectedFilters.wishlist}
-              onClick={() => toggleFilter("wishlist")}
+              active={selectedFilters.marital_status}
+              onClick={() => toggleFilter("marital_status")}
               icon={<FaHeart className="w-4 h-4" />}
               label="Marital Status"
             />
@@ -85,9 +84,6 @@ export default function FilterBar({ filters, setFilters }) {
                 className="appearance-none w-full bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option>Top matches</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Rating: High to Low</option>
                 <option>Newest First</option>
                 <option>Distance</option>
               </select>
@@ -105,10 +101,13 @@ export default function FilterBar({ filters, setFilters }) {
               <label key={loc} className="block text-sm">
                 <input
                   onClick={() =>
-                    setFilters((prev) => ({ ...prev, location: loc }))
+                    setFilters((prev) => ({
+                      ...prev,
+                      country_of_residence: loc,
+                    }))
                   }
                   type="radio"
-                  checked={filters?.location === loc}
+                  checked={filters?.country_of_residence === loc}
                   name="location"
                   className="mr-2"
                 />{" "}
@@ -118,7 +117,7 @@ export default function FilterBar({ filters, setFilters }) {
           </PopupCard>
         )}
 
-        {selectedFilters.rating && (
+        {selectedFilters.hobbies && (
           <PopupCard title="Select Hobbies">
             <div className="flex flex-wrap gap-2">
               {["Reading", "Cooking", "Music", "Yoga", "Travel", "Fitness"].map(
@@ -128,8 +127,8 @@ export default function FilterBar({ filters, setFilters }) {
                     onClick={() =>
                       setFilters((prev) => ({ ...prev, interests: hobby }))
                     }
-                    className={`text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full ${
-                      filters?.interests == hobby && "opacity-50"
+                    className={`text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full cursor-pointer ${
+                      filters?.interests === hobby && "opacity-50"
                     }`}
                   >
                     {hobby}
@@ -140,7 +139,7 @@ export default function FilterBar({ filters, setFilters }) {
           </PopupCard>
         )}
 
-        {selectedFilters.price && (
+        {selectedFilters.age && (
           <PopupCard title="Select Age Range">
             {["18-20", "20-25", "25-35", "50-60"].map((age) => (
               <label key={age} className="block text-sm">
@@ -157,26 +156,35 @@ export default function FilterBar({ filters, setFilters }) {
           </PopupCard>
         )}
 
-        {/*  {selectedFilters.filters && (
+        {selectedFilters.religion && (
           <PopupCard title="Religion">
             {["Islam", "Christianity", "Hinduism", "Open to all Faiths"].map(
               (r) => (
                 <label key={r} className="block text-sm">
-                  <input type="radio" className="mr-2" /> {r}
+                  <input
+                    type="radio"
+                    onChange={() => setFilters((prev) => ({ ...prev, religion: r }))}
+                    checked={filters.religion === r}
+                    name="religion"
+                    className="mr-2"
+                  />{" "}
+                  {r}
                 </label>
               )
             )}
           </PopupCard>
-        )} */}
+        )}
 
-        {selectedFilters.wishlist && (
+        {selectedFilters.marital_status && (
           <PopupCard title="Marital Status">
             {["Single", "Divorced", "Widowed"].map((status) => (
               <label key={status} className="block text-sm">
                 <input
                   type="radio"
-                  onChange={() => setFilters((prev) => ({ ...prev, status }))}
-                  checked={filters.status === status}
+                  onChange={() =>
+                    setFilters((prev) => ({ ...prev, marital_status: status }))
+                  }
+                  checked={filters.marital_status === status}
                   name="marital_status"
                   className="mr-2"
                 />{" "}

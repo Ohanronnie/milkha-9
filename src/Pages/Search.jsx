@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import FilterBar from "../components/Search/FilterBar";
 import { FaCheckCircle, FaMapMarkerAlt, FaHeart } from "react-icons/fa";
-import Profile from "../assets/Profile.png";
 import ProfileModal from "../components/Profile/ProfileModal";
 import SuggestedProfiles from "../components/Search/SuggestedProfiles";
 import { axiosInstance } from "../utils/axios";
@@ -14,41 +13,54 @@ const Search = () => {
   const [searchResult, setSearchResult] = useState(null);
   const [suggestedProfiles, setSuggestedProfiles] = useState(null);
 
-  useEffect(
-    function () {
-      (async function () {
+  useEffect(() => {
+    (async function () {
+      if (filters) {
+        let { age, interests, country_of_residence, marital_status, religion } =
+          filters;
 
-        if (filters) {
-          let { age, interests, location, status } = filters;
-          const initParams = {
-            age_min: age?.split("-")[0],
-            age_max: age?.split("-")[1],
-            interests,
-            location,
-            status,
-          };
-          const filtered = Object.entries(initParams).reduce((acc, [key, value]) => {
-            if(value) acc[key] = value;
+        const initParams = {
+          age_min: age?.split("-")[0],
+          age_max: age?.split("-")[1],
+          interests,
+          country_of_residence,
+          marital_status,
+          religion,
+        };
+
+        const filtered = Object.entries(initParams).reduce(
+          (acc, [key, value]) => {
+            if (value) acc[key] = value;
             return acc;
-          }, {})
-          const search = new URLSearchParams(filtered);
-          const response = await axiosInstance.get("/profile/matches/search/?"+search.toString());
-          setSearchResult(response.data)
+          },
+          {}
+        );
+
+        const search = new URLSearchParams(filtered);
+        try {
+          const response = await axiosInstance.get(
+            "/profile/matches/search/?" + search.toString()
+          );
+          console.log("Search results:", response.data);
+          setSearchResult(response.data);
+        } catch (error) {
+          toast.error("Search failed");
         }
-      })();
-    },
-    [filters]
-  );
-  useEffect(()=>{
+      }
+    })();
+  }, [filters]);
+
+  useEffect(() => {
     (async () => {
       try {
         const response = await axiosInstance.get("/matchmaking/potential/");
-        setSuggestedProfiles(response.data)
-      } catch(error){
-        toast.error('Error occured retry')
+        setSuggestedProfiles(response.data);
+      } catch (error) {
+        toast.error("Error occurred, retry");
       }
-    })()
-  },[])
+    })();
+  }, []);
+
   return (
     <div>
       <FilterBar {...{ filters, setFilters }} />
@@ -72,10 +84,12 @@ const Search = () => {
                   alt={profile.fullname}
                   className="w-full h-64 object-cover"
                 />
-                {/* Completion Badge */}
-                <span className="absolute top-2 right-2 bg-white text-xs font-semibold text-gray-700 px-2 py-1 rounded-full shadow">
-                  {profile.completion}% COMPLETED
-                </span>
+                {/* Completion Badge (optional) */}
+                {profile.completion && (
+                  <span className="absolute top-2 right-2 bg-white text-xs font-semibold text-gray-700 px-2 py-1 rounded-full shadow">
+                    {profile.completion}% COMPLETED
+                  </span>
+                )}
               </div>
 
               {/* Profile Details */}
