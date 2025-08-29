@@ -42,6 +42,7 @@ const MyLikes = () => {
   useEffect(function () {
     (async () => {
       const response = await axiosInstance.get("/matchmaking/liked");
+      console.log("my likes are",response.data);
       setLikes(response.data)
     })();
   }, []);

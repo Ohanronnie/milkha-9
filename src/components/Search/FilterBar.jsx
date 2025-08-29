@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FaMapMarkerAlt, FaStar, FaHeart, FaChevronDown } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { FaMapMarkerAlt, FaStar, FaHeart, FaChevronDown, FaSearch } from "react-icons/fa";
 
 export default function FilterBar({ filters, setFilters }) {
   const [selectedFilters, setSelectedFilters] = useState({
@@ -11,6 +11,12 @@ export default function FilterBar({ filters, setFilters }) {
   });
 
   const [sortBy, setSortBy] = useState("Top matches");
+  const [searchInput, setSearchInput] = useState(filters?.fullname || ""); // track input
+
+  // keep local input in sync with external filters.fullname
+  useEffect(() => {
+    setSearchInput(filters?.fullname || "");
+  }, [filters?.fullname]);
 
   const toggleFilter = (filterName) => {
     setSelectedFilters((prev) => {
@@ -22,14 +28,44 @@ export default function FilterBar({ filters, setFilters }) {
     });
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = searchInput.trim();
+    setFilters((prev) => ({
+      ...prev,
+      // remove fullname key if empty so parent won't send an empty param
+      fullname: trimmed !== "" ? trimmed : undefined,
+    }));
+  };
+
   return (
     <div className="relative">
       <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-12">
-        {/* Filter buttons container */}
+        {/* Search + Filters container */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Search input */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center w-full md:w-1/3 bg-gray-50 border border-gray-200 rounded-full px-3 py-2"
+          >
+            <FaSearch className="text-gray-400 mr-2" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by name..."
+              className="w-full bg-transparent focus:outline-none text-sm"
+            />
+            <button
+              type="submit"
+              className="ml-2 text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-full"
+            >
+              Search
+            </button>
+          </form>
+
           {/* Filter buttons */}
           <div className="flex overflow-x-auto md:overflow-visible space-x-3 pb-2">
-            {/* Location */}
             <FilterButton
               active={selectedFilters.location}
               onClick={() => toggleFilter("location")}
@@ -37,7 +73,6 @@ export default function FilterBar({ filters, setFilters }) {
               label="Location"
             />
 
-            {/* Hobbies */}
             <FilterButton
               active={selectedFilters.hobbies}
               onClick={() => toggleFilter("hobbies")}
@@ -46,7 +81,6 @@ export default function FilterBar({ filters, setFilters }) {
               color="purple"
             />
 
-            {/* Age Range */}
             <FilterButton
               active={selectedFilters.age}
               onClick={() => toggleFilter("age")}
@@ -54,14 +88,12 @@ export default function FilterBar({ filters, setFilters }) {
               color="purple"
             />
 
-            {/* Religion */}
             <FilterButton
               active={selectedFilters.religion}
               onClick={() => toggleFilter("religion")}
               label="Religion"
             />
 
-            {/* Marital Status */}
             <FilterButton
               active={selectedFilters.marital_status}
               onClick={() => toggleFilter("marital_status")}

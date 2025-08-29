@@ -48,7 +48,7 @@ const Matches = () => {
       case "likes":
         return <MyLikes />;
       case "likedMe":
-        return <Loading />;
+        return <LikedMe />;
       default:
         return null;
     }

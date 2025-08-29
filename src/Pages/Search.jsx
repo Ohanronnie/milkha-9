@@ -15,37 +15,45 @@ const Search = () => {
 
   useEffect(() => {
     (async function () {
-      if (filters) {
-        let { age, interests, country_of_residence, marital_status, religion } =
-          filters;
+      if (!filters) return;
 
-        const initParams = {
-          age_min: age?.split("-")[0],
-          age_max: age?.split("-")[1],
-          interests,
-          country_of_residence,
-          marital_status,
-          religion,
-        };
+      const {
+        age,
+        interests,
+        country_of_residence,
+        marital_status,
+        religion,
+        fullname, // include fullname from search input
+      } = filters;
 
-        const filtered = Object.entries(initParams).reduce(
-          (acc, [key, value]) => {
-            if (value) acc[key] = value;
-            return acc;
-          },
-          {}
-        );
+      const initParams = {
+        age_min: age?.split("-")[0],
+        age_max: age?.split("-")[1],
+        interests,
+        country_of_residence,
+        marital_status,
+        religion,
+        fullname,
+      };
 
-        const search = new URLSearchParams(filtered);
-        try {
-          const response = await axiosInstance.get(
-            "/profile/matches/search/?" + search.toString()
-          );
-          console.log("Search results:", response.data);
-          setSearchResult(response.data);
-        } catch (error) {
-          toast.error("Search failed");
+      const filtered = Object.entries(initParams).reduce((acc, [key, value]) => {
+        // exclude undefined/null/empty string values
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          acc[key] = value;
         }
+        return acc;
+      }, {});
+
+      try {
+        const qs = new URLSearchParams(filtered).toString();
+        console.log("Query string:", qs);
+        const url = "/profile/matches/search/" + (qs ? `?${qs}` : "");
+        const response = await axiosInstance.get(url);
+        setSearchResult(response.data);
+        console.log("Search results:", response.data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Search failed");
       }
     })();
   }, [filters]);

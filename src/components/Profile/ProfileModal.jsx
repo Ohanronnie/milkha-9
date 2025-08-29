@@ -26,7 +26,7 @@ const Section = ({ title, children, defaultOpen = false }) => {
 const FullProfileModal = ({ profile: profileData, onClose }) => {
   const [show, setShow] = useState(false);
   const [profile, setProfileData] = useState(null);
-  console.log("running")
+  const [userId, setUserId] = useState(null);
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -39,6 +39,8 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
     axiosInstance
       .get(`/profile/${profileData?.id}`)
       .then(({ data }) => {
+        console.log("Full profile data:", data);
+        setUserId(data.user);
         setProfileData(data);
       })
       .catch(() => {
@@ -50,13 +52,14 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
     return async () => {
       if (type === "like") {
         try {
-          await axiosInstance.post("/matchmaking/like/" + profileData.id);
+          await axiosInstance.post("/matchmaking/like/" + userId);
+          console.log("the like of",profileData);
         } catch (error) {
           toast.error("Error liking user, retry later!");
         }
       } else {
         try {
-          await axiosInstance.post("/matchmaking/shortlist/" + profile.id);
+          await axiosInstance.post("/matchmaking/shortlist/" + userId);
         } catch (error) {
           toast.error("Error shortlisting user, retry later!");
         }
