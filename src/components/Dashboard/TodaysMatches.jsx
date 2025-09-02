@@ -28,11 +28,11 @@ const ProfileCard = ({ name, age, location, imageUrl, match }) => (
   </div>
 );
 
-const ShortlistedProfile = ({ name }) => (
+const ShortlistedProfile = ({ name ,last_name}) => (
   <div className="flex items-center justify-between py-2 border-b">
     <div className="flex items-center">
       <img src={Profile} alt={name} className="w-8 h-8 rounded-full mr-3" />
-      <span>{name}</span>
+      <span>{name} {last_name}</span>
     </div>
     <button className="text-blue-600 hover:underline text-sm flex items-center">
       <FiMessageSquare className="mr-1" /> Send a Message
@@ -140,7 +140,8 @@ const TodaysMatches = ({ matches, shortlisted }) => {
           shortlisted?.map?.((data, idx) => (
             <ShortlistedProfile
               key={data?.matched_user}
-              name={data?.matched_profile}
+              name={data?.matched_profile.first_name}
+              last_name={data?.matched_profile.last_name}
             />
           ))
         )}

@@ -30,6 +30,7 @@ const Dashboard = () => {
         setChatList(chatsRes.data);
         setMatchesCount(countsRes.data);
         setShortListedProfiles(shortlisted.data)
+        console.log("shortlisted",shortlisted.data);
 
       } catch (error) {
         toast.error("Error occurred somewhere, reload page");
@@ -47,7 +48,7 @@ const Dashboard = () => {
         chats={chats}
       
       />
-      {/* <TodaysMatches details={userDetails} matches={matches} shortlisted={shortListedProfiles} /> */}
+      <TodaysMatches details={userDetails} matches={matches} shortlisted={shortListedProfiles} />
       <div className="bg-gray-100 grid lg:grid-cols-3 gap-4 lg:px-12 px-4">
         <div className="lg:col-span-1 col-span-3">
          { <ActivityFeed details={userDetails} />}

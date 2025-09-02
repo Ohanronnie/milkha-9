@@ -53,19 +53,22 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
       if (type === "like") {
         try {
           await axiosInstance.post("/matchmaking/like/" + userId);
-          console.log("the like of",profileData);
+          console.log("User liked:", profileData);
+          toast.success("User liked successfully!"); // Success toast for like
         } catch (error) {
           toast.error("Error liking user, retry later!");
         }
       } else {
         try {
           await axiosInstance.post("/matchmaking/shortlist/" + userId);
+          toast.success("User shortlisted successfully!"); // Success toast for shortlist
         } catch (error) {
           toast.error("Error shortlisting user, retry later!");
         }
       }
     };
   };
+
   if (!profile) return null;
 
   return (

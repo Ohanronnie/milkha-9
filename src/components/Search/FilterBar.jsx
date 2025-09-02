@@ -5,18 +5,20 @@ export default function FilterBar({ filters, setFilters }) {
   const [selectedFilters, setSelectedFilters] = useState({
     location: false,
     hobbies: false,
+    interests: false,
     age: false,
     religion: false,
     marital_status: false,
+    emirate: false,
   });
 
   const [sortBy, setSortBy] = useState("Top matches");
-  const [searchInput, setSearchInput] = useState(filters?.fullname || ""); // track input
+  const [searchInput, setSearchInput] = useState(filters?.name_search || ""); // track input
 
   // keep local input in sync with external filters.fullname
   useEffect(() => {
-    setSearchInput(filters?.fullname || "");
-  }, [filters?.fullname]);
+    setSearchInput(filters?.name_search || "");
+  }, [filters?.name_search]);
 
   const toggleFilter = (filterName) => {
     setSelectedFilters((prev) => {
@@ -34,7 +36,7 @@ export default function FilterBar({ filters, setFilters }) {
     setFilters((prev) => ({
       ...prev,
       // remove fullname key if empty so parent won't send an empty param
-      fullname: trimmed !== "" ? trimmed : undefined,
+      name_search: trimmed !== "" ? trimmed : undefined,
     }));
   };
 
@@ -73,13 +75,13 @@ export default function FilterBar({ filters, setFilters }) {
               label="Location"
             />
 
-            <FilterButton
+            {/* <FilterButton
               active={selectedFilters.hobbies}
               onClick={() => toggleFilter("hobbies")}
               icon={<FaStar className="w-4 h-4" />}
               label="Hobbies"
               color="purple"
-            />
+            /> */}
 
             <FilterButton
               active={selectedFilters.age}
@@ -88,11 +90,11 @@ export default function FilterBar({ filters, setFilters }) {
               color="purple"
             />
 
-            <FilterButton
+            {/* <FilterButton
               active={selectedFilters.religion}
               onClick={() => toggleFilter("religion")}
               label="Religion"
-            />
+            /> */}
 
             <FilterButton
               active={selectedFilters.marital_status}
@@ -135,11 +137,11 @@ export default function FilterBar({ filters, setFilters }) {
                   onClick={() =>
                     setFilters((prev) => ({
                       ...prev,
-                      country_of_residence: loc,
+                      emirate: loc,
                     }))
                   }
                   type="radio"
-                  checked={filters?.country_of_residence === loc}
+                  checked={filters?.emirate === loc}
                   name="location"
                   className="mr-2"
                 />{" "}
@@ -149,7 +151,7 @@ export default function FilterBar({ filters, setFilters }) {
           </PopupCard>
         )}
 
-        {selectedFilters.hobbies && (
+        {/* {selectedFilters.hobbies && (
           <PopupCard title="Select Hobbies">
             <div className="flex flex-wrap gap-2">
               {["Reading", "Cooking", "Music", "Yoga", "Travel", "Fitness"].map(
@@ -169,7 +171,7 @@ export default function FilterBar({ filters, setFilters }) {
               )}
             </div>
           </PopupCard>
-        )}
+        )} */}
 
         {selectedFilters.age && (
           <PopupCard title="Select Age Range">
@@ -188,7 +190,7 @@ export default function FilterBar({ filters, setFilters }) {
           </PopupCard>
         )}
 
-        {selectedFilters.religion && (
+        {/* {selectedFilters.religion && (
           <PopupCard title="Religion">
             {["Islam", "Christianity", "Hinduism", "Open to all Faiths"].map(
               (r) => (
@@ -205,7 +207,7 @@ export default function FilterBar({ filters, setFilters }) {
               )
             )}
           </PopupCard>
-        )}
+        )} */}
 
         {selectedFilters.marital_status && (
           <PopupCard title="Marital Status">

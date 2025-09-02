@@ -20,20 +20,24 @@ const Search = () => {
       const {
         age,
         interests,
-        country_of_residence,
+        country,
         marital_status,
         religion,
-        fullname, // include fullname from search input
+        emirate,
+        name_search, // include fullname from search input
+        email
       } = filters;
 
       const initParams = {
         age_min: age?.split("-")[0],
         age_max: age?.split("-")[1],
         interests,
-        country_of_residence,
+        country,
         marital_status,
         religion,
-        fullname,
+        emirate,
+        name_search,
+        email
       };
 
       const filtered = Object.entries(initParams).reduce((acc, [key, value]) => {
