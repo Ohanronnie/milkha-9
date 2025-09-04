@@ -5,6 +5,37 @@ const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const [notificationSettings, setNotificationSettings] = useState([
+    {
+      label: "Email Updates",
+      desc: "Get notified about new features, offers, and announcements via email.",
+      enabled: true,
+    },
+    {
+      label: "Security Alerts",
+      desc: "Receive alerts for login or password changes.",
+      enabled: true,
+    },
+    {
+      label: "Profile Views & Likes",
+      desc: "See who viewed or liked your profile.",
+      enabled: true,
+    },
+    {
+      label: "New Match Alerts",
+      desc: "Be notified when a new match is found.",
+      enabled: false,
+    },
+  ]);
+
+  const toggleSetting = (index) => {
+    setNotificationSettings((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, enabled: !item.enabled } : item
+      )
+    );
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl space-y-6">
       {/* ACCOUNT INFORMATION */}
@@ -53,8 +84,8 @@ const Settings = () => {
         </h2>
         <select className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400">
           <option>English</option>
-          <option>French</option>
-          <option>Arabic</option>
+          {/* <option>French</option>
+          <option>Arabic</option> */}
         </select>
       </section>
 
@@ -110,41 +141,28 @@ const Settings = () => {
           Notifications
         </h2>
         <div className="space-y-4">
-          {[
-            {
-              label: "Email Updates",
-              desc: "Get notified about new features, offers, and announcements via email.",
-              enabled: true,
-            },
-            {
-              label: "Security Alerts",
-              desc: "Receive alerts for login or password changes.",
-              enabled: true,
-            },
-            {
-              label: "Profile Views & Likes",
-              desc: "See who viewed or liked your profile.",
-              enabled: true,
-            },
-            {
-              label: "New Match Alerts",
-              desc: "Be notified when a new match is found.",
-              enabled: false,
-            },
-          ].map((item, idx) => (
+          {notificationSettings.map((item, idx) => (
             <div key={idx} className="flex items-start justify-between">
-              <div>
+              <div className="pr-4">
                 <p className="text-sm font-semibold">{item.label}</p>
                 <p className="text-xs text-gray-600">{item.desc}</p>
               </div>
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  defaultChecked={item.enabled}
+
+              {/* Toggle Switch */}
+              <button
+                onClick={() => toggleSetting(idx)}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-300 focus:outline-none ${
+                  item.enabled ? "bg-purple-600" : "bg-gray-300"
+                }`}
+                role="switch"
+                aria-checked={item.enabled}
+              >
+                <span
+                  className={`inline-block w-4 h-4 transform bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    item.enabled ? "translate-x-6" : "translate-x-1"
+                  }`}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-purple-600 transition-all duration-300"></div>
-              </label>
+              </button>
             </div>
           ))}
         </div>
