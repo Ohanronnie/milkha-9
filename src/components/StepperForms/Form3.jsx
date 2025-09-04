@@ -2,28 +2,43 @@ import toast from "react-hot-toast";
 
 const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
   const handleChange = (field, value) => {
-    // Ensure value is an integer by parsing and flooring
-    const intValue = value ? parseInt(value, 10) : "";
-    setDetails((prev) => ({ ...prev, [field]: intValue }));
+    // Check if field is numeric (height/weight fields)
+    const numericFields = [
+      "height",
+      "weight",
+      "partner_height",
+      "partner_weight",
+    ];
+
+    if (numericFields.includes(field)) {
+      // For numeric fields, ensure value is an integer by parsing and flooring
+      const intValue = value ? parseInt(value, 10) : "";
+      setDetails((prev) => ({ ...prev, [field]: intValue }));
+    } else {
+      // For non-numeric fields (dropdowns), store the string value directly
+      setDetails((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = () => {
     const validations = [
       {
         field: "height",
-        label: "Height (cm)",
+        label: "Height (ft)",
         validate: (v) => {
           const num = parseInt(v, 10);
-          return !isNaN(num) && num >= 100 && num <= 250 && Number.isInteger(num);
+          return !isNaN(num) && num >= 3 && num <= 7 && Number.isInteger(num);
         },
-        message: "Please enter a valid height in cm (100–250) as an integer",
+        message: "Please enter a valid height in ft (3–7) as an integer",
       },
       {
         field: "weight",
         label: "Weight (kg)",
         validate: (v) => {
           const num = parseInt(v, 10);
-          return !isNaN(num) && num >= 30 && num <= 200 && Number.isInteger(num);
+          return (
+            !isNaN(num) && num >= 30 && num <= 200 && Number.isInteger(num)
+          );
         },
         message: "Please enter a valid weight in kg (30–200) as an integer",
       },
@@ -42,26 +57,31 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
       {
         field: "hair_color",
         label: "Hair Color",
-        validate: (v) => ["Black", "Brown", "Blonde", "Red", "Grey"].includes(v),
+        validate: (v) =>
+          ["Black", "Brown", "Blonde", "Red", "Grey"].includes(v),
         message: "Please select your hair color",
       },
       {
         field: "partner_height",
-        label: "Partner Height (cm)",
+        label: "Partner Height (ft)",
         validate: (v) => {
           const num = parseInt(v, 10);
-          return !isNaN(num) && num >= 100 && num <= 250 && Number.isInteger(num);
+          return !isNaN(num) && num >= 3 && num <= 7 && Number.isInteger(num);
         },
-        message: "Please enter a valid partner height in cm (100–250) as an integer",
+        message:
+          "Please enter a valid partner height in cm (100–250) as an integer",
       },
       {
         field: "partner_weight",
         label: "Partner Weight (kg)",
         validate: (v) => {
           const num = parseInt(v, 10);
-          return !isNaN(num) && num >= 30 && num <= 200 && Number.isInteger(num);
+          return (
+            !isNaN(num) && num >= 30 && num <= 200 && Number.isInteger(num)
+          );
         },
-        message: "Please enter a valid partner weight in kg (30–200) as an integer",
+        message:
+          "Please enter a valid partner weight in kg (30–200) as an integer",
       },
       {
         field: "partnerSkinColor",
@@ -78,7 +98,8 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
       {
         field: "partnerHairColor",
         label: "Partner Hair Color",
-        validate: (v) => ["Black", "Brown", "Blonde", "Red", "Grey"].includes(v),
+        validate: (v) =>
+          ["Black", "Brown", "Blonde", "Red", "Grey"].includes(v),
         message: "Please select partner's hair color",
       },
     ];
@@ -104,7 +125,7 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Height */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Height (cm)</label>
+          <label className="block mb-1 font-medium text-sm">Height (ft)</label>
           <input
             type="number"
             placeholder="Input your height"
@@ -135,9 +156,9 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
             onChange={(e) => handleChange("skin_color", e.target.value)}
           >
             <option value="">Select your skin color</option>
-            <option>Fair</option>
-            <option>Medium</option>
-            <option>Dark</option>
+            <option value="Fair">Fair</option>
+            <option value="Medium">Medium</option>
+            <option value="Dark">Dark</option>
           </select>
         </div>
 
@@ -150,10 +171,10 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
             onChange={(e) => handleChange("eye_color", e.target.value)}
           >
             <option value="">Select eye color</option>
-            <option>Blue</option>
-            <option>Green</option>
-            <option>Brown</option>
-            <option>Black</option>
+            <option value="Blue">Blue</option>
+            <option value="Green">Green</option>
+            <option value="Brown">Brown</option>
+            <option value="Black">Black</option>
           </select>
         </div>
 
@@ -166,11 +187,11 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
             onChange={(e) => handleChange("hair_color", e.target.value)}
           >
             <option value="">Select hair color</option>
-            <option>Black</option>
-            <option>Brown</option>
-            <option>Blonde</option>
-            <option>Red</option>
-            <option>Grey</option>
+            <option value="Black">Black</option>
+            <option value="Brown">Brown</option>
+            <option value="Blonde">Blonde</option>
+            <option value="Red">Red</option>
+            <option value="Grey">Grey</option>
           </select>
         </div>
       </div>
@@ -185,7 +206,9 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Preferred Height */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Partner Height (cm)</label>
+          <label className="block mb-1 font-medium text-sm">
+            Partner Height (ft)
+          </label>
           <input
             type="number"
             placeholder="Input preferred height"
@@ -197,7 +220,9 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
 
         {/* Preferred Weight */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Partner Weight (kg)</label>
+          <label className="block mb-1 font-medium text-sm">
+            Partner Weight (kg)
+          </label>
           <input
             type="number"
             placeholder="Input preferred weight"
@@ -209,49 +234,55 @@ const PhysicalAppearanceForm = ({ details, setDetails, next, prev }) => {
 
         {/* Partner Skin Color */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Partner Skin Color</label>
+          <label className="block mb-1 font-medium text-sm">
+            Partner Skin Color
+          </label>
           <select
             className="w-full border px-3 py-2 rounded"
             value={details.partnerSkinColor || ""}
             onChange={(e) => handleChange("partnerSkinColor", e.target.value)}
           >
             <option value="">Select skin color</option>
-            <option>Fair</option>
-            <option>Medium</option>
-            <option>Dark</option>
+            <option value="Fair">Fair</option>
+            <option value="Medium">Medium</option>
+            <option value="Dark">Dark</option>
           </select>
         </div>
 
         {/* Partner Eye Color */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Partner Eye Color</label>
+          <label className="block mb-1 font-medium text-sm">
+            Partner Eye Color
+          </label>
           <select
             className="w-full border px-3 py-2 rounded"
             value={details.partnerEyeColor || ""}
             onChange={(e) => handleChange("partnerEyeColor", e.target.value)}
           >
             <option value="">Select eye color</option>
-            <option>Blue</option>
-            <option>Green</option>
-            <option>Brown</option>
-            <option>Black</option>
+            <option value="Blue">Blue</option>
+            <option value="Green">Green</option>
+            <option value="Brown">Brown</option>
+            <option value="Black">Black</option>
           </select>
         </div>
 
         {/* Partner Hair Color */}
         <div>
-          <label className="block mb-1 font-medium text-sm">Partner Hair Color</label>
+          <label className="block mb-1 font-medium text-sm">
+            Partner Hair Color
+          </label>
           <select
             className="w-full border px-3 py-2 rounded"
             value={details.partnerHairColor || ""}
             onChange={(e) => handleChange("partnerHairColor", e.target.value)}
           >
             <option value="">Select hair color</option>
-            <option>Black</option>
-            <option>Brown</option>
-            <option>Blonde</option>
-            <option>Red</option>
-            <option>Grey</option>
+            <option value="Black">Black</option>
+            <option value="Brown">Brown</option>
+            <option value="Blonde">Blonde</option>
+            <option value="Red">Red</option>
+            <option value="Grey">Grey</option>
           </select>
         </div>
       </div>
