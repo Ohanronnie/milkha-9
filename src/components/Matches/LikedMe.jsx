@@ -80,7 +80,7 @@ const LikedMe = () => {
                 {/* View Profile Button */}
                 <div className="inline-flex w-full gap-2">
                   <button
-                    onClick={() => setSelectedProfile(profile)}
+                    onClick={() => setSelectedProfile(profile.matched_profile)}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-md"
                   >
                     View Profile

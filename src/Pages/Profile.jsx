@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileCard from "../components/Profile/ProfileCard";
 import UserInfoPanel from "../components/Profile/UserInfoPanel";
 import PhotoUploader from "../components/Profile/Photos";
@@ -16,7 +16,7 @@ const Profile = () => {
         console.log(error)
         toast.error("Error occurred try reloading")
       }
-      
+
     })()
   },[])
   return (

@@ -46,7 +46,7 @@ const Dashboard = () => {
         details={userDetails}
         matchCounts={matchesCount}
         chats={chats}
-      
+
       />
       <TodaysMatches details={userDetails} matches={matches} shortlisted={shortListedProfiles} />
       <div className="bg-gray-100 grid lg:grid-cols-3 gap-4 lg:px-12 px-4">
@@ -54,7 +54,7 @@ const Dashboard = () => {
          { <ActivityFeed details={userDetails} />}
         </div>
         <div className="lg:col-span-2 col-span-3 pb-">
-          
+
           <ProfileEnhancement details={userDetails} />
         </div>
       </div>

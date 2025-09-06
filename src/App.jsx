@@ -25,6 +25,7 @@ import Matches from "./Pages/Matches";
 import { axiosInstance } from "./utils/axios";
 import { useEffect, useState } from "react";
 import { set } from "date-fns";
+
 const ProtectedRoute = ({ children }) => {
   const access = localStorage.getItem("access_token");
   const [loading, setLoading] = useState(true);

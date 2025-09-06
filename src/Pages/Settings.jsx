@@ -1,10 +1,11 @@
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { axiosInstance } from "../utils/axios";
 
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
+  const [userSetting, setUserSetting] = useState(null);
   const [notificationSettings, setNotificationSettings] = useState([
     {
       label: "Email Updates",
@@ -36,6 +37,27 @@ const Settings = () => {
     );
   };
 
+  useEffect(() => {
+    const fetchSettingsData = async () => {
+      const response = await axiosInstance.get("/profile/settings/account");
+      setUserSetting(response.data);
+    };
+    fetchSettingsData();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Handle form submission logic here
+    try {
+      const response = await axiosInstance.patch("/profile/settings/account", {
+        ...userSetting,
+      });
+      console.log("Settings updated:", response.data);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl space-y-6">
       {/* ACCOUNT INFORMATION */}
@@ -50,7 +72,10 @@ const Settings = () => {
             </label>
             <input
               type="text"
-              value="Jane"
+              value={userSetting?.first_name || "Jane"}
+              onChange={(e) =>
+                setUserSetting({ ...userSetting, first_name: e.target.value })
+              }
               className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
@@ -60,7 +85,10 @@ const Settings = () => {
             </label>
             <input
               type="text"
-              value="Jane"
+              value={userSetting?.last_name || "Doe"}
+              onChange={(e) =>
+                setUserSetting({ ...userSetting, last_name: e.target.value })
+              }
               className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
@@ -71,7 +99,10 @@ const Settings = () => {
           </label>
           <input
             type="email"
-            value="hello@jane.com"
+            value={userSetting?.email || "hello@gmail.com"}
+            onChange={(e) =>
+              setUserSetting({ ...userSetting, email: e.target.value })
+            }
             className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
         </div>
@@ -130,7 +161,10 @@ const Settings = () => {
             </button>
           </div>
         </div>
-        <button className="mt-4 bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700">
+        <button
+          onClick={handleSubmit}
+          className="mt-4 bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700"
+        >
           Save Changes
         </button>
       </section>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaApple, FaGoogle, FaEyeSlash } from "react-icons/fa";
+// import { FaApple, FaGoogle, FaEyeSlash } from "react-icons/fa";
 import CoupleImage from "../../assets/Couple.png"; // 👈 Your local image
 import toast from "react-hot-toast";
 import Logo from "../../assets/Logo.png"; // 👈 Your local image
@@ -22,7 +22,7 @@ const SignupPage = () => {
     }
     try {
       setIsSubmitting(true);
-      const response = await axiosInstance.post("/auth/register/", details);
+      await axiosInstance.post("/auth/register/", details);
       toast.success("Verification code sent!");
       localStorage.setItem("email", btoa(details.email));
       navigate("/otp");
@@ -58,11 +58,11 @@ const SignupPage = () => {
           A meaningful connection is just a click away
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          By signing up, I agree to Mikha's{" "}
+          By signing up, I agree to Mikha&apos;s{" "}
           <span className="text-purple-600 underline">Terms</span> and{" "}
           <span className="text-purple-600 underline">Privacy Policy</span>
         </p>
-        {/* OAuth Buttons 
+        {/* OAuth Buttons
         <div className="space-y-3">
           <div className="w-full px-20 flex items-center justify-center border rounded py-2 text-sm font-medium">
             <FaApple className="mr-2" /> Sign up with Apple

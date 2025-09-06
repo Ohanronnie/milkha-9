@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   FaSearch,
   FaVideo,
@@ -19,16 +19,7 @@ const RecentMatchItem = ({ avatar, name }) => (
   </div>
 );
 
-const ConversationItem = ({
-  avatar,
-  name,
-  lastMessage,
-  time,
-  unreadCount,
-  conversation,
-  isActive = false,
-  onClick,
-}) => (
+const ConversationItem = ({ conversation, isActive = false, onClick }) => (
   <div
     className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
       isActive ? "bg-blue-50 border-r-2 border-blue-500" : ""
@@ -37,8 +28,11 @@ const ConversationItem = ({
   >
     <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
       <img
-        src={conversation.other_user.photos?.find((v) => v.is_primary)?.photo}
-        alt={name}
+        src={
+          conversation.other_user.photos?.find((v) => v.is_primary)?.photo ||
+          "/default-avatar.png"
+        }
+        alt={conversation.other_user.first_name}
         className="w-full h-full object-cover"
       />
     </div>
@@ -49,7 +43,7 @@ const ConversationItem = ({
             " " +
             conversation.other_user.last_name}
         </h3>
-        {conversation.unread_count && (
+        {conversation.unread_count > 0 && (
           <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
             {conversation.unread_count}
           </span>
@@ -62,12 +56,16 @@ const ConversationItem = ({
   </div>
 );
 
-const MessageBubble = ({ messages }) => {
-  if (!messages) return;
-  const { sender_profile, sender, content, sent_at } = messages;
-  let [message, time] = [content, sent_at];
-  time = new Date(time).toLocaleTimeString()
-  const isOwn = sender_profile?.id == window.user.id;
+const MessageBubble = ({ message }) => {
+  if (!message) return null;
+
+  const { sender_profile, content, sent_at } = message;
+  const time = new Date(sent_at).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const isOwn = sender_profile?.id === window.user.id;
+
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-4`}>
       <div
@@ -77,30 +75,14 @@ const MessageBubble = ({ messages }) => {
             : "bg-gray-100 text-gray-900"
         }`}
       >
-        {false ? (
-          <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-            <div
-              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-              style={{ animationDelay: "0.1s" }}
-            ></div>
-            <div
-              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-              style={{ animationDelay: "0.2s" }}
-            ></div>
-          </div>
-        ) : (
-          <p className="text-sm">{message}</p>
-        )}
-        {time && (
-          <p
-            className={`text-xs mt-1 ${
-              isOwn ? "text-purple-100" : "text-gray-500"
-            }`}
-          >
-            {time}
-          </p>
-        )}
+        <p className="text-sm">{content}</p>
+        <p
+          className={`text-xs mt-1 ${
+            isOwn ? "text-purple-100" : "text-gray-500"
+          }`}
+        >
+          {time}
+        </p>
       </div>
     </div>
   );
@@ -108,95 +90,155 @@ const MessageBubble = ({ messages }) => {
 
 export default function MessagingInterface() {
   const [message, setMessage] = useState("");
-  const [selectedUser, setSelectedUser] = useState("");
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showChat, setShowChat] = useState(false);
-  const [conversations, setConversations] = useState(null);
-  const [ws, setWs] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
+  const conversationsPollingIntervalRef = useRef(null);
 
-  const [messages, setMessages] = useState(null);
-  const recentMatches = [
-    {
-      id: 1,
-      name: "Kate",
-      avatar:
-        "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&h=100&fit=crop&crop=face",
-    },
-    {
-      id: 2,
-      name: "Sarah",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
-    },
-    {
-      id: 3,
-      name: "Emma",
-      avatar:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face",
-    },
-    {
-      id: 4,
-      name: "Lisa",
-      avatar:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
-    },
-  ];
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    (async () => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fetch conversations with polling
+  useEffect(() => {
+    const fetchConversations = async () => {
       try {
-        const response = await axiosInstance.get("/matchmaking/chat-rooms");
+        const response = await axiosInstance.get("/matchmaking/chat-rooms/");
         setConversations(response.data);
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching conversations:", error);
       }
-    })();
+    };
+
+    // Initial fetch
+    fetchConversations();
+
+    // Set up polling for conversations
+    conversationsPollingIntervalRef.current = setInterval(
+      fetchConversations,
+      5000
+    ); // Poll every 5 seconds
+
+    // Clean up interval on component unmount
+    return () => {
+      if (conversationsPollingIntervalRef.current) {
+        clearInterval(conversationsPollingIntervalRef.current);
+      }
+    };
   }, []);
 
+  // Fetch messages for selected conversation with polling
   useEffect(() => {
-    const interval = setInterval(async () => {
-      if (selectedConversation) {
-        const messages = await axiosInstance.get(
-          `/matchmaking/chat-rooms/${selectedConversation.id}/messages`
+    const fetchMessages = async () => {
+      if (!selectedConversation) return;
+
+      try {
+        const response = await axiosInstance.get(
+          `/matchmaking/chat-rooms/${selectedConversation.id}/messages/`
         );
-        setMessages(messages.data);
-        console.log("Fetched messages:", messages.data);
+        setMessages(response.data);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }, 1000);
-    return () => clearInterval(interval);
+    };
+
+    if (selectedConversation) {
+      // Initial fetch
+      setIsLoading(true);
+      fetchMessages();
+
+      // Set up polling for messages
+      pollingIntervalRef.current = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+
+      // Clean up interval when conversation changes or component unmounts
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+      };
+    }
   }, [selectedConversation]);
+
   const handleConversationClick = (conversation) => {
     setSelectedConversation(conversation);
-    setSelectedUser(conversation.name);
     setShowChat(true);
+
+    // Mark messages as read when opening conversation
+    if (conversation.unread_count > 0) {
+      markMessagesAsRead(conversation.id);
+    }
+  };
+
+  const markMessagesAsRead = async (roomId) => {
+    try {
+      // This endpoint might need to be implemented on your backend
+      await axiosInstance.post(`/matchmaking/chat-rooms/${roomId}/mark-read/`);
+
+      // Update conversations to reflect read status
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === roomId ? { ...conv, unread_count: 0 } : conv
+        )
+      );
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
   };
 
   const handleBackToMessages = () => {
     setShowChat(false);
     setSelectedConversation(null);
+
+    // Clear the messages polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
   };
 
-  const handleSendMessage = () => {
-  if (message.trim()) {
-    console.log("selectedConversation.id:", selectedConversation.id);
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedConversation || isSending) return;
 
-    axiosInstance
-      .post(
-        "/matchmaking/chat-rooms/" + selectedConversation.id + "/messages",
+    setIsSending(true);
+    try {
+      const response = await axiosInstance.post(
+        `/matchmaking/chat-rooms/${selectedConversation.id}/messages/`,
         {
-          sender: window.user.user,
           content: message,
         }
-      )
-      .then(({ data }) => setMessages((prev) => [...prev, data]))
-      .catch((error) => {
-        console.error("Failed to send message:", error.message);
-        alert("Failed to send message. Please try again.");
-      });
-    console.log("Sending message:", message);
-    setMessage("");
-  }
-};
+      );
+
+      // Add the new message to the messages list immediately for better UX
+      setMessages((prev) => [...prev, response.data]);
+      setMessage("");
+
+      // Update the conversation list with the last message
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === selectedConversation.id
+            ? { ...conv, last_message: response.data }
+            : conv
+        )
+      );
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="flex h-[95vh] bg-white lg:px-12 p-4">
@@ -213,8 +255,8 @@ export default function MessagingInterface() {
             <FaSearch className="text-gray-400 cursor-pointer" />
           </div>
 
-          {/* Recent matches 
-          <div>
+          {/* Recent matches - Uncomment if needed */}
+          {/* <div>
             <p className="text-sm text-gray-500 mb-3">
               Recent matches you haven't messaged
             </p>
@@ -223,19 +265,25 @@ export default function MessagingInterface() {
                 <RecentMatchItem key={match.id} {...match} />
               ))}
             </div>
-          </div>*/}
+          </div> */}
         </div>
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {conversations?.map((conversation) => (
-            <ConversationItem
-              key={conversation.id}
-              conversation={conversation}
-              isActive={selectedConversation?.id === conversation.id}
-              onClick={() => handleConversationClick(conversation)}
-            />
-          ))}
+          {conversations.length > 0 ? (
+            conversations.map((conversation) => (
+              <ConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isActive={selectedConversation?.id === conversation.id}
+                onClick={() => handleConversationClick(conversation)}
+              />
+            ))
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              No conversations yet
+            </div>
+          )}
         </div>
       </div>
 
@@ -274,9 +322,9 @@ export default function MessagingInterface() {
                     src={
                       selectedConversation.other_user.photos?.find(
                         (v) => v.is_primary
-                      )?.photo
+                      )?.photo || "/default-avatar.png"
                     }
-                    alt={selectedConversation.first_name}
+                    alt={selectedConversation.other_user.first_name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -290,21 +338,28 @@ export default function MessagingInterface() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-              {/*}  <FaVideo className="text-gray-400 cursor-pointer hover:text-gray-600" />
-                <FaPhone className="text-gray-400 cursor-pointer hover:text-gray-600" />
-                <div className="text-gray-500 text-xs hidden sm:block">
-                  View Profile
-                </div> */}
                 <FaEllipsisV className="text-gray-400 cursor-pointer hover:text-gray-600" />
               </div>
             </div>
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-              {messages?.map((msg) => (
-                <MessageBubble key={msg.id} messages={msg} />
-              ))}
-              <MessageBubble isTyping={true} />
+              {isLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                </div>
+              ) : messages.length > 0 ? (
+                <>
+                  {messages.map((msg) => (
+                    <MessageBubble key={msg.id} message={msg} />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              ) : (
+                <div className="flex justify-center items-center h-full text-gray-500">
+                  No messages yet. Start the conversation!
+                </div>
+              )}
             </div>
 
             {/* Message Input */}
@@ -317,18 +372,22 @@ export default function MessagingInterface() {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Write your message..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && !isSending && handleSendMessage()
+                    }
+                    disabled={isSending}
                   />
-                  {/*<div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                    <FaPaperclip className="text-gray-400 cursor-pointer hover:text-gray-600" />
-                    <FaSmile className="text-gray-400 cursor-pointer hover:text-gray-600" />
-                  </div>*/}
                 </div>
                 <button
                   onClick={handleSendMessage}
-                  className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-600 transition-colors"
+                  disabled={!message.trim() || isSending}
+                  className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPaperPlane className="w-4 h-4" />
+                  {isSending ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <FaPaperPlane className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
