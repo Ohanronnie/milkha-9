@@ -15,7 +15,7 @@ const MatchList = () => {
   useEffect(function () {
     (async () => {
       try {
-        const response = await axiosInstance.get("/profile/matches/search");
+        const response = await axiosInstance.get("/matchmaking/mutual");
         console.log("matches", response.data);
         setMatches(response.data);
       } catch (error) {
@@ -27,7 +27,7 @@ const MatchList = () => {
 
   return (
     <div>
-      <Toaster />{" "}
+      <Toaster />
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">
         Matched Profiles
       </h2>
@@ -41,7 +41,7 @@ const MatchList = () => {
           matches.map((profile, index) => (
             <ProfileCard
               key={index}
-              profile={profile}
+              profile={profile.matched_profile}
               optionalPhoto={profile.photo}
             />
           ))

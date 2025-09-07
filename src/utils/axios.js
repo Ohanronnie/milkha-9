@@ -20,7 +20,7 @@ function getAuthHeaders() {
 let isRefreshing = false;
 
 axiosInstance.interceptors.request.use((config) => {
-  console.log("axios config",config)
+  //console.log("axios config",config)
   if(!config.url.split("?")[1] && !config.url.endsWith("/")){
     config.url = config.url + "/"
   }

@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import toast from "react-hot-toast";
 import { FaUser, FaCalendarAlt } from "react-icons/fa";
+import Select from "react-select";
+import countryList from "react-select-country-list";
 
 const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
   const handleChange = (field, value) =>
@@ -31,7 +33,7 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
         validate: (v) => Boolean(v),
         message: "Gender selection is required",
       },
-     
+
       {
         field: "marital_status",
         label: "Marital Status",
@@ -91,6 +93,8 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
 
     return true;
   };
+  const countryOptions = useMemo(() => countryList().getData(), []);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 bg-gray-50 min-h-screen">
       {/* 1. Basic Info */}
@@ -246,7 +250,7 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
         </div>
 
         {/* Country & Emirate */}
-        <div>
+        {/* <div>
           <label className="block mb-1 text-sm font-medium">
             Country of Residence
           </label>
@@ -257,7 +261,23 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
             }
             className="w-full border rounded px-3 py-2"
           />
-           
+        </div> */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">
+            Country of Residence
+          </label>
+          <Select
+            options={countryOptions}
+            value={countryOptions.find(
+              (option) => option.label === details.country_of_residence
+            )}
+            onChange={(option) =>
+              handleChange("country_of_residence", option.label)
+            }
+            className="w-full"
+            classNamePrefix="react-select"
+            placeholder="Select country"
+          />
         </div>
         <div>
           <label className="block mb-1 text-sm font-medium">
@@ -338,14 +358,10 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
           </label>
           <input
             value={details.partner_location}
-            onChange={(e) =>
-              handleChange("partner_location", e.target.value)
-            }
+            onChange={(e) => handleChange("partner_location", e.target.value)}
             className="w-full border rounded px-3 py-2"
           />
-            
         </div>
-       
       </div>
       <div className="flex flex-col mt-8 sm:flex-row justify-between gap-4">
         <button

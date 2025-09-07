@@ -19,6 +19,39 @@ const RecentMatchItem = ({ avatar, name }) => (
   </div>
 );
 
+const NewMatches = ({ matches, onStartChat }) => {
+  if (!matches || matches.length === 0) return null;
+
+  return (
+    <div>
+      <p className="text-sm text-gray-700 mb-2 font-semibold">New matches</p>
+      <div className="flex space-x-3 overflow-x-auto [&::-webkit-scrollbar]:hidden  pb-2">
+        {matches.map((match) => (
+          <button
+            key={match.id}
+            className="flex-shrink-0 focus:outline-none"
+            onClick={() => onStartChat && onStartChat(match)}
+            style={{ minWidth: "6rem" }}
+          >
+            <div className="relative w-28 h-40 md:w-24 md:h-32 rounded-2xl overflow-hidden shadow border-2 border-purple-300">
+              <img
+                src={match.avatar || "/default-avatar.png"}
+                alt={match.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 left-0 w-full py-2 px-1">
+                <span className="text-md md:text-md font-bold text-white block truncate text-center">
+                  {match.name}
+                </span>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ConversationItem = ({ conversation, isActive = false, onClick }) => (
   <div
     className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
@@ -28,9 +61,7 @@ const ConversationItem = ({ conversation, isActive = false, onClick }) => (
   >
     <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
       <img
-        src={
-          conversation.photo || "/default-avatar.png"
-        }
+        src={conversation.photo || "/default-avatar.png"}
         // src={
         //   conversation.other_user.photos?.find((v) => v.is_primary)?.photo ||
         //   "/default-avatar.png"
@@ -129,7 +160,7 @@ export default function MessagingInterface() {
     // Set up polling for conversations
     conversationsPollingIntervalRef.current = setInterval(
       fetchConversations,
-      500000
+      5000
     ); // Poll every 5 seconds
 
     // Clean up interval on component unmount
@@ -188,7 +219,10 @@ export default function MessagingInterface() {
   const markMessagesAsRead = async (roomId) => {
     try {
       // This endpoint might need to be implemented on your backend
-      await axiosInstance.post(`/matchmaking/chat-rooms/${roomId}/mark-read/`);
+      await axiosInstance.post("/matchmaking/message/mark-read/", {
+        chat_id: roomId,
+        message_id: selectedConversation.id,
+      });
 
       // Update conversations to reflect read status
       setConversations((prev) =>
@@ -246,7 +280,7 @@ export default function MessagingInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-white lg:px-12 p-4">
+    <div className="flex min-h-screen bg-white lg:px-12 p-4">
       {/* Sidebar - Hidden on mobile when chat is open */}
       <div
         className={`w-full md:w-80 border-r border-gray-200 flex flex-col ${
@@ -271,19 +305,40 @@ export default function MessagingInterface() {
               ))}
             </div>
           </div> */}
+          {/* pass in the user they havent chatted with yet */}
+          <NewMatches
+            matches={conversations
+              .filter((c) => !c.last_message)
+              .map((c) => ({
+                id: c.other_user.id,
+                name: c.other_user.first_name,
+                avatar: c.photo || "/default-avatar.png",
+                conversation: c,
+              }))}
+            onStartChat={(match) => {
+              setSelectedConversation(match.conversation);
+              setShowChat(true);
+            }}
+          />
+          {/* <NewMatches matches={recentMatches} /> */}
         </div>
 
         {/* Conversations List */}
+        <p className="text-sm text-gray-700 ml-2 my-2 font-semibold">
+          Active Chats
+        </p>
         <div className="flex-1 overflow-y-auto">
           {conversations.length > 0 ? (
-            conversations.map((conversation) => (
-              <ConversationItem
-                key={conversation.id}
-                conversation={conversation}
-                isActive={selectedConversation?.id === conversation.id}
-                onClick={() => handleConversationClick(conversation)}
-              />
-            ))
+            conversations
+              .filter((conversation) => conversation.last_message) // Only show if there's a message
+              .map((conversation) => (
+                <ConversationItem
+                  key={conversation.id}
+                  conversation={conversation}
+                  isActive={selectedConversation?.id === conversation.id}
+                  onClick={() => handleConversationClick(conversation)}
+                />
+              ))
           ) : (
             <div className="p-4 text-center text-gray-500">
               No conversations yet
@@ -324,9 +379,7 @@ export default function MessagingInterface() {
                 </button>
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                   <img
-                    src={
-                      selectedConversation.photo || "/default-avatar.png"
-                    }
+                    src={selectedConversation.photo || "/default-avatar.png"}
                     // src={
                     //   selectedConversation.other_user.photos?.find(
                     //     (v) => v.is_primary
@@ -364,19 +417,23 @@ export default function MessagingInterface() {
                   <div ref={messagesEndRef} />
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                  <div className="mb-4 text-base font-semibold text-gray-700">
-                    You are matched with {selectedConversation.other_user.first_name} {selectedConversation.other_user.last_name}
+                <div className="flex flex-col w-56 mx-auto items-center justify-center h-full text-gray-500">
+                  <div className="mb-4 text-base items-center justify-center text-center font-semibold text-gray-700">
+                    You are matched with
+                    <br />
+                    {selectedConversation.other_user.first_name}{" "}
+                    {selectedConversation.other_user.last_name}
                   </div>
-                  <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-purple-200 shadow">
+                  <div className="w-40 h-40 rounded-full overflow-hidden mb-4 border-4 border-purple-200 shadow">
                     <img
                       src={selectedConversation.photo || "/default-avatar.png"}
                       alt={selectedConversation.other_user.first_name}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="text-sm text-gray-500 text-center">
-                    Don&apos;t be shy! Say something nice to start a conversation
+                  <div className="text-sm font-medium text-gray-500 text-center">
+                    Don&apos;t be shy! Say something nice to start a
+                    conversation
                   </div>
                 </div>
               )}

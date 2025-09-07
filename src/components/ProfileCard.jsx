@@ -15,28 +15,46 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
   if (!profile) return null;
 
   // Handler for message button
+  // const handleMessageClick = async () => {
+  //   try {
+  //     // Get the list of users I liked
+  //     const responseLikes = await axiosInstance.get(`/matchmaking/liked`);
+  //     // Get the list of users who liked me
+  //     const responseLikedMe = await axiosInstance.get(
+  //       `/matchmaking/users-who-liked-me/`
+  //     );
+  //     console.log("liked", responseLikes);
+  //     console.log("likedMe", responseLikedMe);
+  //     console.log("profile user", profile.user);
+
+  //     // Extract user IDs from both lists
+  //     const likedIds = responseLikes.data.map((item) => item.matched_user);
+  //     const likedMeIds = responseLikedMe.data.map((item) => item.matched_user);
+
+  //     // Check if this profile's user is in both lists (mutual match)
+  //     if (
+  //       profile.user &&
+  //       likedIds.includes(profile.user) &&
+  //       likedMeIds.includes(profile.user)
+  //     ) {
+  //       navigate(`/Messages`);
+  //     } else {
+  //       toast.error(
+  //         "You can only message users who have also liked you (mutual match."
+  //       );
+  //     }
+  //   } catch (error) {
+  //     toast.error("Could not check match status. Please try again.");
+  //   }
+  // };
+
   const handleMessageClick = async () => {
     try {
-      // Get the list of users I liked
-      const responseLikes = await axiosInstance.get(`/matchmaking/liked`);
-      // Get the list of users who liked me
-      const responseLikedMe = await axiosInstance.get(
-        `/matchmaking/users-who-liked-me/`
+      const response = await axiosInstance.get(
+        `/matchmaking/check-mutual/${profile.user}`
       );
-      console.log("liked", responseLikes);
-      console.log("likedMe", responseLikedMe);
-      console.log("profile user", profile.user);
-
-      // Extract user IDs from both lists
-      const likedIds = responseLikes.data.map((item) => item.matched_user);
-      const likedMeIds = responseLikedMe.data.map((item) => item.matched_user);
-
-      // Check if this profile's user is in both lists (mutual match)
-      if (
-        profile.user &&
-        likedIds.includes(profile.user) &&
-        likedMeIds.includes(profile.user)
-      ) {
+      console.log("Match check response:", response);
+      if (response.data.is_match) {
         navigate(`/Messages`);
       } else {
         toast.error(
