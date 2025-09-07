@@ -88,7 +88,7 @@ const TodaysMatches = ({ matches, shortlisted }) => {
                         <ProfileCard
                           key={slideIndex * cardsPerSlide + profileIndex}
                           profile={profile.profile}
-                          onViewProfile={setSelectedProfile}
+                          optionalPhoto={profile.photo}
                         />
                         // <div
                         //   key={slideIndex * cardsPerSlide + profileIndex}

@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { FaUser, FaCalendarAlt } from "react-icons/fa";
 import Select from "react-select";
 import countryList from "react-select-country-list";
+import { State, Country } from "country-state-city";
 
 const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
   const handleChange = (field, value) =>
@@ -94,6 +95,18 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
     return true;
   };
   const countryOptions = useMemo(() => countryList().getData(), []);
+  const selectedCountry = countryOptions.find(
+    (option) => option.label === details.country_of_residence
+  );
+
+  const stateOptions = useMemo(() => {
+    if (!selectedCountry) return [];
+    // country-state-city expects ISO code, react-select-country-list gives value as ISO code
+    return State.getStatesOfCountry(selectedCountry.value).map((state) => ({
+      value: state.name,
+      label: state.name,
+    }));
+  }, [selectedCountry]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 bg-gray-50 min-h-screen">
@@ -268,9 +281,7 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
           </label>
           <Select
             options={countryOptions}
-            value={countryOptions.find(
-              (option) => option.label === details.country_of_residence
-            )}
+            value={selectedCountry}
             onChange={(option) =>
               handleChange("country_of_residence", option.label)
             }
@@ -279,24 +290,37 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
             placeholder="Select country"
           />
         </div>
-        <div>
-          <label className="block mb-1 text-sm font-medium">
-            I reside in the Emirate of
-          </label>
-          <input
-            value={details.emirate}
-            onChange={(e) => handleChange("emirate", e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        {selectedCountry && (
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Residential State / Region / Emirate
+            </label>
+            <Select
+              options={stateOptions}
+              value={stateOptions.find(
+                (option) => option.value === details.emirate
+              )}
+              onChange={(option) => handleChange("emirate", option.value)}
+              className="w-full"
+              classNamePrefix="react-select"
+              placeholder="Select state/region"
+              isDisabled={stateOptions.length === 0}
+            />
+          </div>
+        )}
 
         {/* Nationality */}
         <div>
           <label className="block mb-1 text-sm font-medium">Nationality</label>
-          <input
-            value={details.nationality}
-            onChange={(e) => handleChange("nationality", e.target.value)}
-            className="w-full border rounded px-3 py-2"
+          <Select
+            options={countryOptions}
+            value={countryOptions.find(
+              (option) => option.label === details.nationality
+            )}
+            onChange={(option) => handleChange("nationality", option.label)}
+            className="w-full"
+            classNamePrefix="react-select"
+            placeholder="Select country"
           />
         </div>
       </div>
@@ -354,12 +378,19 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
         {/* Partner Country & Emirate */}
         <div>
           <label className="block mb-1 text-sm font-medium">
-            Partner's Country of Residence
+            Partner&apos;s Country of Residence
           </label>
-          <input
-            value={details.partner_location}
-            onChange={(e) => handleChange("partner_location", e.target.value)}
-            className="w-full border rounded px-3 py-2"
+          <Select
+            options={countryOptions}
+            value={countryOptions.find(
+              (option) => option.label === details.partner_location
+            )}
+            onChange={(option) =>
+              handleChange("partner_location", option.label)
+            }
+            className="w-full"
+            classNamePrefix="react-select"
+            placeholder="Select country"
           />
         </div>
       </div>
