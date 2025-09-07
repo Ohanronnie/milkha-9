@@ -29,9 +29,12 @@ const ConversationItem = ({ conversation, isActive = false, onClick }) => (
     <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
       <img
         src={
-          conversation.other_user.photos?.find((v) => v.is_primary)?.photo ||
-          "/default-avatar.png"
+          conversation.photo || "/default-avatar.png"
         }
+        // src={
+        //   conversation.other_user.photos?.find((v) => v.is_primary)?.photo ||
+        //   "/default-avatar.png"
+        // }
         alt={conversation.other_user.first_name}
         className="w-full h-full object-cover"
       />
@@ -121,12 +124,12 @@ export default function MessagingInterface() {
     };
 
     // Initial fetch
-    fetchConversations();
+    //fetchConversations();
 
     // Set up polling for conversations
     conversationsPollingIntervalRef.current = setInterval(
       fetchConversations,
-      5000
+      500000
     ); // Poll every 5 seconds
 
     // Clean up interval on component unmount
@@ -158,6 +161,7 @@ export default function MessagingInterface() {
       // Initial fetch
       setIsLoading(true);
       fetchMessages();
+      console.log("Selected conversation:", selectedConversation);
 
       // Set up polling for messages
       pollingIntervalRef.current = setInterval(fetchMessages, 3000); // Poll every 3 seconds
@@ -216,6 +220,7 @@ export default function MessagingInterface() {
       const response = await axiosInstance.post(
         `/matchmaking/chat-rooms/${selectedConversation.id}/messages/`,
         {
+          sender: window.user.user,
           content: message,
         }
       );
@@ -241,7 +246,7 @@ export default function MessagingInterface() {
   };
 
   return (
-    <div className="flex h-[95vh] bg-white lg:px-12 p-4">
+    <div className="flex h-screen bg-white lg:px-12 p-4">
       {/* Sidebar - Hidden on mobile when chat is open */}
       <div
         className={`w-full md:w-80 border-r border-gray-200 flex flex-col ${
@@ -320,10 +325,13 @@ export default function MessagingInterface() {
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                   <img
                     src={
-                      selectedConversation.other_user.photos?.find(
-                        (v) => v.is_primary
-                      )?.photo || "/default-avatar.png"
+                      selectedConversation.photo || "/default-avatar.png"
                     }
+                    // src={
+                    //   selectedConversation.other_user.photos?.find(
+                    //     (v) => v.is_primary
+                    //   )?.photo || "/default-avatar.png"
+                    // }
                     alt={selectedConversation.other_user.first_name}
                     className="w-full h-full object-cover"
                   />
@@ -356,12 +364,23 @@ export default function MessagingInterface() {
                   <div ref={messagesEndRef} />
                 </>
               ) : (
-                <div className="flex justify-center items-center h-full text-gray-500">
-                  No messages yet. Start the conversation!
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <div className="mb-4 text-base font-semibold text-gray-700">
+                    You are matched with {selectedConversation.other_user.first_name} {selectedConversation.other_user.last_name}
+                  </div>
+                  <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-purple-200 shadow">
+                    <img
+                      src={selectedConversation.photo || "/default-avatar.png"}
+                      alt={selectedConversation.other_user.first_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-500 text-center">
+                    Don&apos;t be shy! Say something nice to start a conversation
+                  </div>
                 </div>
               )}
             </div>
-
             {/* Message Input */}
             <div className="p-4 border-t border-gray-200">
               <div className="flex items-center space-x-3">

@@ -6,6 +6,7 @@ import { LuMessagesSquare } from "react-icons/lu";
 import getAge from "../utils/getAge";
 import ProfileModal from "./Profile/ProfileModal";
 import { axiosInstance } from "../utils/axios";
+import toast from "react-hot-toast";
 
 const ProfileCard = ({ profile, optionalPhoto }) => {
   const [showProfileModal, setShowProfileModal] = React.useState(false);
@@ -19,13 +20,16 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
       // Get the list of users I liked
       const responseLikes = await axiosInstance.get(`/matchmaking/liked`);
       // Get the list of users who liked me
-      const responseLiked = await axiosInstance.get(
+      const responseLikedMe = await axiosInstance.get(
         `/matchmaking/users-who-liked-me/`
       );
+      console.log("liked", responseLikes);
+      console.log("likedMe", responseLikedMe);
+      console.log("profile user", profile.user);
 
       // Extract user IDs from both lists
       const likedIds = responseLikes.data.map((item) => item.matched_user);
-      const likedMeIds = responseLiked.data.map((item) => item.matched_user);
+      const likedMeIds = responseLikedMe.data.map((item) => item.matched_user);
 
       // Check if this profile's user is in both lists (mutual match)
       if (
@@ -35,12 +39,12 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
       ) {
         navigate(`/Messages`);
       } else {
-        alert(
-          "You can only message users who have also liked you (mutual match)."
+        toast.error(
+          "You can only message users who have also liked you (mutual match."
         );
       }
     } catch (error) {
-      alert("Could not check match status. Please try again.");
+      toast.error("Could not check match status. Please try again.");
     }
   };
 
@@ -116,4 +120,3 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
 };
 
 export default ProfileCard;
-
