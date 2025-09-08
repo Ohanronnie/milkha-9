@@ -42,7 +42,7 @@ const LikedMe = () => {
           profiles?.map((profile, index) => (
             <ProfileCard
               key={index}
-              profile={profile.matched_profile}
+              profile={profile.profile}
               optionalPhoto={profile.photo}
             />
           ))

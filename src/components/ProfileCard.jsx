@@ -76,9 +76,9 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
             alt={profile.fullname}
             className="w-full h-56 object-cover"
           />
-          {profile.completion && (
+          {profile.compatible && (
             <span className="absolute top-2 right-2 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
-              {profile.completion}% COMPLETED
+              {profile.compatible}% COMPATIBLE
             </span>
           )}
         </div>

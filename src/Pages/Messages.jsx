@@ -139,9 +139,9 @@ export default function MessagingInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   // Fetch conversations with polling
   useEffect(() => {
@@ -218,10 +218,8 @@ export default function MessagingInterface() {
 
   const markMessagesAsRead = async (roomId) => {
     try {
-      // This endpoint might need to be implemented on your backend
       await axiosInstance.post("/matchmaking/message/mark-read/", {
         chat_id: roomId,
-        message_id: selectedConversation.id,
       });
 
       // Update conversations to reflect read status
@@ -354,7 +352,7 @@ export default function MessagingInterface() {
         }`}
       >
         {selectedConversation ? (
-          <>
+          <div className="flex flex-col">
             {/* Chat Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center">
@@ -404,7 +402,7 @@ export default function MessagingInterface() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div className="h-[40rem] overflow-y-auto p-4 bg-gray-50">
               {isLoading ? (
                 <div className="flex justify-center items-center h-full">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
@@ -439,7 +437,7 @@ export default function MessagingInterface() {
               )}
             </div>
             {/* Message Input */}
-            <div className="p-4 border-t border-gray-200">
+            <div className="bg-gray-50 fixed md:w-[72.5%] w-full bottom-0 p-4 border-t border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="flex-1 relative">
                   <input
@@ -467,7 +465,7 @@ export default function MessagingInterface() {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         ) : (
           /* No conversation selected - desktop only */
           <div className="hidden md:flex flex-1 items-center justify-center bg-gray-50">
