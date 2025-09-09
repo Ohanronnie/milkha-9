@@ -19,6 +19,7 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [userDetails, setUserDetails] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -29,9 +30,26 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   useEffect(() => {
-    axiosInstance.get("/profile").then(({ data }) => {
-      setUserDetails(data)
-    }).catch(e => toast.error("error occurred somewhere"))
+    axiosInstance
+      .get("/profile")
+      .then(({ data }) => {
+        setUserDetails(data);
+      })
+      .catch((e) => toast.error("error occurred somewhere"));
+  }, []);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await axiosInstance.get(
+          "/notifications/unread/count/"
+        );
+        setUnreadCount(data.count || 0);
+      } catch (e) {
+        setUnreadCount(0);
+      }
+    };
+    fetchUnreadCount();
   }, []);
   const isActive = (path) => location.pathname === path;
 
@@ -95,8 +113,13 @@ const Navbar = () => {
 
           {/* Right Side (Dropdown Trigger) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/Notifications">
+            <Link to="/Notifications" className="relative">
               <FiBell className="text-xl cursor-pointer" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] flex items-center justify-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
             <div className="relative" ref={dropdownRef}>
               <button
@@ -203,14 +226,22 @@ const Navbar = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <img
-                src={ userDetails?.photos.find((e) => e.is_primary)?.photo  || Profile}
+                src={
+                  userDetails?.photos.find((e) => e.is_primary)?.photo ||
+                  Profile
+                }
                 alt="User"
                 className="h-8 w-8 rounded-full object-cover"
               />
               <span className="text-sm">{userDetails?.first_name}</span>
             </div>
-            <Link to="/Notifications">
-              <FiBell className="text-xl cursor-pointer" />
+            <Link to="/Notifications" className="relative">
+              <FiBell className="w-20 h-20 cursor-pointer" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] flex items-center justify-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
