@@ -58,7 +58,9 @@ export default function Notifications() {
   const handleMarkAllRead = async () => {
     try {
       await axiosInstance.post("/notifications/mark-read/");
-      setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
+      // Re-fetch notifications to update UI
+      const response = await axiosInstance.get("/notifications");
+      setNotifications(response.data);
       toast.success("All notifications marked as read");
     } catch (error) {
       toast.error("Failed to mark all as read");

@@ -1,33 +1,16 @@
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../utils/axios";
 
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [userSetting, setUserSetting] = useState(null);
-  const [notificationSettings, setNotificationSettings] = useState([
-    {
-      label: "Email Updates",
-      desc: "Get notified about new features, offers, and announcements via email.",
-      enabled: true,
-    },
-    {
-      label: "Security Alerts",
-      desc: "Receive alerts for login or password changes.",
-      enabled: true,
-    },
-    {
-      label: "Profile Views & Likes",
-      desc: "See who viewed or liked your profile.",
-      enabled: true,
-    },
-    {
-      label: "New Match Alerts",
-      desc: "Be notified when a new match is found.",
-      enabled: false,
-    },
-  ]);
+  const [notificationSettings, setNotificationSettings] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
 
   const toggleSetting = (index) => {
     setNotificationSettings((prev) =>
@@ -58,8 +41,19 @@ const Settings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    // Dummy API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setDeleting(false);
+    setShowDeleteModal(false);
+    navigate("/signup");
+  };
+
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl space-y-6">
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl space-y-6 relative">
       {/* ACCOUNT INFORMATION */}
       <section className="bg-[#f5edff] p-4 rounded-xl">
         <h2 className="text-sm font-bold text-purple-800 uppercase mb-4">
@@ -204,10 +198,44 @@ const Settings = () => {
 
       {/* DELETE BUTTON */}
       <div className="text-center">
-        <button className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-md mt-4">
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-md mt-4"
+          onClick={() => setShowDeleteModal(true)}
+        >
           Delete Account
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+            <h2 className="text-lg font-bold mb-4 text-red-600">
+              Confirm Account Deletion
+            </h2>
+            <p className="mb-6 text-gray-700">
+              Are you sure you want to delete your account? This action cannot
+              be undone.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
