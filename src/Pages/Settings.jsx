@@ -6,6 +6,11 @@ import { axiosInstance } from "../utils/axios";
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [userSetting, setUserSetting] = useState(null);
   const [notificationSettings, setNotificationSettings] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -38,6 +43,46 @@ const Settings = () => {
       console.log("Settings updated:", response.data);
     } catch (error) {
       console.error("Error updating settings:", error);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError(null);
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPasswordError("All password fields are required.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      await axiosInstance.post("/auth/password/change/", {
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_new_password: confirmNewPassword,
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordError(null);
+      alert("Password changed successfully!");
+    } catch (error) {
+      const response = error?.response;
+      setPasswordError(
+        response?.data?.non_field_errors
+          ? response.data.non_field_errors.join(" ")
+          : response?.data?.new_password1?.join(" ") ||
+              "Failed to change password."
+      );
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -119,48 +164,77 @@ const Settings = () => {
         <h2 className="text-sm font-bold text-purple-800 uppercase mb-4">
           Change Password
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <label className="block text-sm font-semibold mb-1">
-              New Password
-            </label>
-            <input
-              type={showPassword ? "text" : "password"}
-              className="w-full p-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              className="absolute right-2 top-9 text-gray-500"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
+        <form onSubmit={handlePasswordChange}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <label className="block text-sm font-semibold mb-1">
+                Current Password
+              </label>
+              <input
+                type="password"
+                className="w-full p-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="••••••••"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-sm font-semibold mb-1">
+                New Password
+              </label>
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full p-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-9 text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+            <div className="relative">
+              <label className="block text-sm font-semibold mb-1">
+                Confirm New Password
+              </label>
+              <input
+                type={showConfirm ? "text" : "password"}
+                className="w-full p-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="••••••••"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-9 text-gray-500"
+                onClick={() => setShowConfirm(!showConfirm)}
+              >
+                {showConfirm ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
-          <div className="relative">
-            <label className="block text-sm font-semibold mb-1">
-              Confirm New Password
-            </label>
-            <input
-              type={showConfirm ? "text" : "password"}
-              className="w-full p-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              className="absolute right-2 top-9 text-gray-500"
-              onClick={() => setShowConfirm(!showConfirm)}
-            >
-              {showConfirm ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
-        </div>
-        <button
-          onClick={handleSubmit}
-          className="mt-4 bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700"
-        >
-          Save Changes
-        </button>
+          {passwordError && (
+            <p className="text-red-600 text-sm text-center mt-2">
+              {passwordError}
+            </p>
+          )}
+          <button
+            type="submit"
+            className="mt-4 bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700"
+            disabled={passwordLoading}
+          >
+            {passwordLoading ? "Changing..." : "Change Password"}
+          </button>
+        </form>
       </section>
 
       {/* NOTIFICATIONS */}

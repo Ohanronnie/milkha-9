@@ -246,6 +246,7 @@ export default function MessagingInterface() {
 
   const handleSendMessage = async () => {
     if (!message.trim() || !selectedConversation || isSending) return;
+    scrollToBottom();
 
     setIsSending(true);
     try {
@@ -402,7 +403,7 @@ export default function MessagingInterface() {
             </div>
 
             {/* Messages Area */}
-            <div className="h-[40rem] overflow-y-auto p-4 bg-gray-50">
+            <div className="h-[40rem] overflow-y-auto p-10 bg-gray-50">
               {isLoading ? (
                 <div className="flex justify-center items-center h-full">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
