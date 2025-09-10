@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaCheckCircle, FaMapMarkerAlt, FaHeart } from "react-icons/fa";
 import Profile from "../assets/Profile.png";
 import { useNavigate } from "react-router-dom";
@@ -8,57 +8,75 @@ import ProfileModal from "./Profile/ProfileModal";
 import { axiosInstance } from "../utils/axios";
 import toast from "react-hot-toast";
 
-const ProfileCard = ({ profile, optionalPhoto }) => {
-  const [showProfileModal, setShowProfileModal] = React.useState(false);
+const ProfileCard = ({ profile, optionalPhoto, isLiked, compatibilityScore }) => {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [liked, setLiked] = useState(!!isLiked);
+  const [mutual, setMutual] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchMutualStatus = async () => {
+      try {
+        // Only check for mutual
+        const mutualRes = await axiosInstance.get(
+          `/matchmaking/check-mutual/${profile.user}`
+        );
+        if (!mounted) return;
+        setMutual(!!mutualRes.data.is_match);
+      } catch (e) {
+        // ignore
+      }
+    };
+    if (profile?.user) fetchMutualStatus();
+    return () => {
+      mounted = false;
+    };
+  }, [profile?.user]);
 
   if (!profile) return null;
 
-  // Handler for message button
-  // const handleMessageClick = async () => {
-  //   try {
-  //     // Get the list of users I liked
-  //     const responseLikes = await axiosInstance.get(`/matchmaking/liked`);
-  //     // Get the list of users who liked me
-  //     const responseLikedMe = await axiosInstance.get(
-  //       `/matchmaking/users-who-liked-me/`
-  //     );
-  //     console.log("liked", responseLikes);
-  //     console.log("likedMe", responseLikedMe);
-  //     console.log("profile user", profile.user);
+  const handleLike = async () => {
+    setLoading(true);
+    try {
+      await axiosInstance.post(`/matchmaking/like/${profile.user}/`);
+      setLiked(true);
+      toast.success(
+        `You just liked ${profile.first_name} ${profile.last_name}`
+      );
+    } catch (e) {
+      toast.error("Could not like profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  //     // Extract user IDs from both lists
-  //     const likedIds = responseLikes.data.map((item) => item.matched_user);
-  //     const likedMeIds = responseLikedMe.data.map((item) => item.matched_user);
-
-  //     // Check if this profile's user is in both lists (mutual match)
-  //     if (
-  //       profile.user &&
-  //       likedIds.includes(profile.user) &&
-  //       likedMeIds.includes(profile.user)
-  //     ) {
-  //       navigate(`/Messages`);
-  //     } else {
-  //       toast.error(
-  //         "You can only message users who have also liked you (mutual match."
-  //       );
-  //     }
-  //   } catch (error) {
-  //     toast.error("Could not check match status. Please try again.");
-  //   }
-  // };
+  const handleUnlike = async () => {
+    setLoading(true);
+    try {
+      await axiosInstance.post(`/matchmaking/unlike/${profile.user}/`);
+      setLiked(false);
+      toast.success(
+        `You just unliked ${profile.first_name} ${profile.last_name}`
+      );
+    } catch (e) {
+      toast.error("Could not unlike profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleMessageClick = async () => {
     try {
       const response = await axiosInstance.get(
         `/matchmaking/check-mutual/${profile.user}`
       );
-      console.log("Match check response:", response);
       if (response.data.is_match) {
         navigate(`/Messages`);
       } else {
         toast.error(
-          "You can only message users who have also liked you (mutual match."
+          "You can only message users who have also liked you (mutual match)."
         );
       }
     } catch (error) {
@@ -76,9 +94,9 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
             alt={profile.fullname}
             className="w-full h-56 object-cover"
           />
-          {profile.compatible && (
+          {compatibilityScore && compatibilityScore != 0 && (
             <span className="absolute top-2 right-2 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
-              {profile.compatible}% COMPATIBLE
+              {compatibilityScore}% COMPATIBLE
             </span>
           )}
         </div>
@@ -108,22 +126,42 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
               <FaCheckCircle className="text-base" />
               {profile.marital_status?.toUpperCase()}
             </span>
-            <FaHeart className="text-gray-300" />
           </div>
-          {/* View Profile & Message Button */}
-          <div className="inline-flex w-full gap-2">
+          {/* View Profile Button & Like/Unlike/Message icons */}
+          <div className="inline-flex w-full gap-2 items-center">
             <button
               onClick={() => setShowProfileModal(true)}
               className="w-8/12 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white text-sm font-bold py-2 rounded-lg shadow transition"
             >
               VIEW PROFILE
             </button>
-            <button
-              onClick={handleMessageClick}
-              className="w-4/12 px-6 text-purple-500 border border-purple-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
-            >
-              <LuMessagesSquare className="text-xl" />
-            </button>
+            {mutual ? (
+              <button
+                onClick={handleMessageClick}
+                className="w-4/12 px-6 text-purple-500 border border-purple-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
+                title="Message"
+              >
+                <LuMessagesSquare className="text-xl" />
+              </button>
+            ) : liked ? (
+              <button
+                onClick={handleUnlike}
+                disabled={loading}
+                className="w-4/12 px-6 text-red-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
+                title="Unlike"
+              >
+                <FaHeart className="text-red-500 text-xl" />
+              </button>
+            ) : (
+              <button
+                onClick={handleLike}
+                disabled={loading}
+                className="w-4/12 px-6 text-purple-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
+                title="Like"
+              >
+                <FaHeart className="text-gray-300 text-xl" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -138,3 +176,17 @@ const ProfileCard = ({ profile, optionalPhoto }) => {
 };
 
 export default ProfileCard;
+// <div className="inline-flex w-full gap-2">
+//   <button
+//     onClick={() => setShowProfileModal(true)}
+//     className="w-8/12 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white text-sm font-bold py-2 rounded-lg shadow transition"
+//   >
+//     VIEW PROFILE
+//   </button>
+//   <button
+//     onClick={handleMessageClick}
+//     className="w-4/12 px-6 text-purple-500 border border-purple-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
+//   >
+//     <LuMessagesSquare className="text-xl" />
+//   </button>
+// </div>;

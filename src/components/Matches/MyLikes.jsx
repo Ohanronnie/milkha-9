@@ -34,6 +34,8 @@ const MyLikes = () => {
               key={index}
               profile={profile.matched_profile}
               optionalPhoto={profile.photo}
+              isLiked={profile.liked}
+              compatibilityScore={profile.compatibility_score}
             />
           ))
         )}

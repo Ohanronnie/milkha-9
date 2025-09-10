@@ -15,7 +15,7 @@ export default function PhotoUploader({ userDetails }) {
       const formData = new FormData();
 
       formData.append("photo", file);
-     
+
       axiosInstance
         .post("/profile/photos/upload/", formData)
         .then((_) => toast.success("Image uploaded successfully"))
@@ -26,7 +26,16 @@ export default function PhotoUploader({ userDetails }) {
   };
   useEffect(
     function () {
-      userDetails && setImages([...userDetails?.photos?.map?.((v) => v.photo),null,null,null,null].slice(0,4));
+      userDetails &&
+        setImages(
+          [
+            ...userDetails?.photos?.map?.((v) => v.photo),
+            null,
+            null,
+            null,
+            null,
+          ].slice(0, 4)
+        );
     },
     [userDetails]
   );

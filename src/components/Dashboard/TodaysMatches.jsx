@@ -1,26 +1,80 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiMessageSquare, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaCheckCircle, FaMapMarkerAlt, FaHeart } from "react-icons/fa";
 import Profile from "../../assets/Profile.png";
 import Loading from "../layout/LoadingOrNull";
 import ProfileModal from "../../components/Profile/ProfileModal";
-import getAge from "../../utils/getAge";
 import ProfileCard from "../ProfileCard";
 
+import { axiosInstance } from "../../utils/axios";
+import toast from "react-hot-toast";
 
-const ShortlistedProfile = ({ name, last_name }) => (
-  <div className="flex items-center justify-between py-2 border-b last:border-b-0">
-    <div className="flex items-center gap-3">
-      <img src={Profile} alt={name} className="w-8 h-8 rounded-full object-cover border" />
-      <span className="font-medium text-gray-700 uppercase">
-        {name} {last_name}
-      </span>
+const ShortlistedProfile = ({ profile, photo }) => {
+  const [liked, setLiked] = useState(!!profile.liked);
+  const [loading, setLoading] = useState(false);
+
+  const handleLike = async () => {
+    setLoading(true);
+    try {
+      await axiosInstance.post(`/matchmaking/like/${profile.user}/`);
+      setLiked(true);
+      toast.success(
+        `You just liked ${profile.first_name} ${profile.last_name}`
+      );
+    } catch (e) {
+      toast.error("Could not like profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnlike = async () => {
+    setLoading(true);
+    try {
+      await axiosInstance.post(`/matchmaking/unlike/${profile.user}/`);
+      setLiked(false);
+      toast.success(
+        `You just unliked ${profile.first_name} ${profile.last_name}`
+      );
+    } catch (e) {
+      toast.error("Could not unlike profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b last:border-b-0">
+      <div className="flex items-center gap-3">
+        <img
+          src={photo || profile.photo || Profile}
+          alt={profile.first_name}
+          className="w-8 h-8 rounded-full object-cover border"
+        />
+        <span className="font-medium text-gray-700 uppercase">
+          {profile.first_name} {profile.last_name}
+        </span>
+      </div>
+      {liked ? (
+        <button
+          className="text-red-600 text-base hover:text-red-800 flex items-center gap-1 transition"
+          onClick={handleUnlike}
+          disabled={loading}
+        >
+          <FaHeart className="text-red-500" />
+        </button>
+      ) : (
+        <button
+          className="text-purple-600 text-base hover:text-blue-800 flex items-center gap-1 transition"
+          onClick={handleLike}
+          disabled={loading}
+        >
+          <FaHeart className="text-gray-300" />
+        </button>
+      )}
     </div>
-    <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 transition">
-      <FiMessageSquare /> Message
-    </button>
-  </div>
-);
+  );
+};
 
 const TodaysMatches = ({ matches, shortlisted }) => {
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -30,7 +84,8 @@ const TodaysMatches = ({ matches, shortlisted }) => {
   const totalSlides = matches ? Math.ceil(matches.length / cardsPerSlide) : 0;
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  const prevSlide = () =>
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
   const goToSlide = (slideIndex) => setCurrentSlide(slideIndex);
 
   return (
@@ -39,7 +94,9 @@ const TodaysMatches = ({ matches, shortlisted }) => {
       <div className="lg:col-span-2">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <p className="text-2xl font-bold text-purple-700">TODAY'S MATCHES</p>
+            <p className="text-2xl font-bold text-purple-700">
+              TODAY'S MATCHES
+            </p>
             <p className="pb-6 text-gray-500">Based on your preferences</p>
           </div>
           {matches && matches.length > cardsPerSlide && (
@@ -174,17 +231,21 @@ const TodaysMatches = ({ matches, shortlisted }) => {
 
       {/* Shortlisted Profiles */}
       <div className="w-full bg-white p-4 shadow rounded-2xl">
-        <h2 className="text-lg font-bold mb-4 text-purple-700">SHORTLISTED PROFILES</h2>
+        <h2 className="text-lg font-bold mb-4 text-purple-700">
+          SHORTLISTED PROFILES
+        </h2>
         {!shortlisted || shortlisted.length === 0 ? (
           <Loading />
         ) : (
-          shortlisted.map((data) => (
-            <ShortlistedProfile
-              key={data?.matched_user}
-              name={data?.matched_profile.first_name?.toUpperCase()}
-              last_name={data?.matched_profile.last_name?.toUpperCase()}
-            />
-          ))
+          shortlisted
+            .filter((listed) => listed.shortlisted && !listed.liked)
+            .map((data) => (
+              <ShortlistedProfile
+                key={data?.matched_user}
+                profile={data.matched_profile}
+                photo={data.photo}
+              />
+            ))
         )}
       </div>
     </div>
@@ -192,3 +253,9 @@ const TodaysMatches = ({ matches, shortlisted }) => {
 };
 
 export default TodaysMatches;
+
+// profiles
+//   .filter((profile) => profile.shortlisted && !profile.liked)
+//   .map((profile, index) => (
+//     <ShortlistedProfileCard key={index} profile={profile} />
+//   ));
