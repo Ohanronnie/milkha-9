@@ -15,7 +15,7 @@ import MessagingInterface from "./Pages/Messages";
 import SignupPage from "./Pages/Auth.jsx/Signup";
 import OTP from "./Pages/Auth.jsx/OTP";
 import Login from "./Pages/Auth.jsx/Login";
-import ForgotPassword from "./Pages/Auth.jsx/ForgotPassword";
+// import ForgotPassword from "./Pages/Auth.jsx/ForgotPassword";
 import MatchModal from "./components/Profile/MatchModal";
 import StepperForm from "./Pages/StepperForm";
 import Navbar from "./components/layout/Navbar";
@@ -74,7 +74,7 @@ function App() {
         <Routes>
           <Route path="/Login" element={<Login />} />
 
-          <Route path="/ForgotPassword" element={<ForgotPassword />} />
+          {/* <Route path="/ForgotPassword" element={<ForgotPassword />} /> */}
           <Route path="/Signup" element={<SignupPage />} />
 
           <Route path="/OTP" element={<OTP />} />

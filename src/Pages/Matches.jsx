@@ -9,36 +9,7 @@ import MyLikes from "../components/Matches/MyLikes";
 import MatchList from "../components/Matches/MatchList";
 import Loading from "../components/layout/LoadingOrNull";
 
-const profiles = [
-  {
-    name: "Odrea Azur",
-    age: 27,
-    location: "Middle-East, UAE",
-    status: "ISLAM",
-    image: Profile, // Replace with your local image path
-    completion: 75,
-  },
-  {
-    name: "Odrea Azur",
-    age: 27,
-    location: "Middle-East, UAE",
-    status: "ISLAM",
-    image: Profile,
-    completion: 75,
-  },
-  {
-    name: "Odrea Azur",
-    age: 27,
-    location: "Middle-East, UAE",
-    status: "ISLAM",
-    image: Profile,
-    completion: 75,
-  },
-];
-
 const Matches = () => {
-  const [selectedProfile, setSelectedProfile] = useState(null);
-
   const [activeTab, setActiveTab] = useState("match");
 
   const renderContent = () => {

@@ -9,6 +9,73 @@ import {
   FaPaperclip,
 } from "react-icons/fa";
 import { axiosInstance } from "../utils/axios";
+import toast from "react-hot-toast";
+
+// PopoverMenu component for chat header actions
+function PopoverMenu({ userId, targetUserId, onAction }) {
+  console.log("targetUserId", targetUserId);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const handleAction = async (type) => {
+    setOpen(false);
+    try {
+      if (type === "unlike") {
+        await axiosInstance.post(`/matchmaking/unlike/${targetUserId}/`);
+        onAction && onAction("unlike");
+      } else if (type === "block") {
+        await axiosInstance.post(`/matchmaking/block/${userId}/`);
+        onAction && onAction("block");
+      } else if (type === "report") {
+        await axiosInstance.post(`/matchmaking/report/${userId}/`);
+        onAction && onAction("report");
+      }
+    } catch (err) {
+      toast.error("Failed to perform action. Please try again.");
+    }
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <FaEllipsisV
+        className="text-gray-400 cursor-pointer hover:text-gray-600"
+        onClick={() => setOpen((v) => !v)}
+      />
+      {open && (
+        <div className="absolute -right-10 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+          <button
+            className="block w-full text-left px-4 py-2 font-medium text-sm hover:bg-gray-100 text-gray-700"
+            onClick={() => handleAction("unlike")}
+          >
+            Unlike Profile
+          </button>
+          <button
+            className="block w-full text-left px-4 py-2 font-medium text-sm hover:bg-gray-100 text-red-600"
+            onClick={() => handleAction("block")}
+          >
+            Block Profile
+          </button>
+          <button
+            className="block w-full text-left px-4 py-2 font-medium text-sm hover:bg-gray-100 text-red-600"
+            onClick={() => handleAction("report")}
+          >
+            Report User Profile
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const RecentMatchItem = ({ avatar, name }) => (
   <div className="flex-shrink-0 text-center">
@@ -148,6 +215,7 @@ export default function MessagingInterface() {
     const fetchConversations = async () => {
       try {
         const response = await axiosInstance.get("/matchmaking/chat-rooms/");
+        console.log("Fetched conversations:", response.data);
         setConversations(response.data);
       } catch (error) {
         console.error("Error fetching conversations:", error);
@@ -272,7 +340,7 @@ export default function MessagingInterface() {
       );
     } catch (error) {
       console.error("Failed to send message:", error);
-      alert("Failed to send message. Please try again.");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -398,7 +466,20 @@ export default function MessagingInterface() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <FaEllipsisV className="text-gray-400 cursor-pointer hover:text-gray-600" />
+                <PopoverMenu
+                  userId={selectedConversation?.other_user?.user}
+                  targetUserId={selectedConversation?.other_user?.user}
+                  onAction={(action) => {
+                    if (action === "unlike") {
+                      // Optionally close chat or update UI
+                      toast.success("User unliked.");
+                    } else if (action === "block") {
+                      toast.success("User blocked.");
+                    } else if (action === "report") {
+                      toast.success("User reported.");
+                    }
+                  }}
+                />
               </div>
             </div>
 

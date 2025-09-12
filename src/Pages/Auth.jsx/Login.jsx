@@ -5,12 +5,14 @@ import Logo from "../../assets/Logo.png"; // 👈 Your local image
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../utils/axios";
+import ForgotPassword from "./ForgotPassword";
 
 const Login = () => {
   const [details, setDetails] = useState({});
   const [errors, setErrors] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const navigate = useNavigate()
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const navigate = useNavigate();
   const handleChange = (e) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -24,13 +26,13 @@ const Login = () => {
     e.preventDefault();
     try {
       setErrors(null);
-      setIsSubmitting(true)
+      setIsSubmitting(true);
       const response = await axiosInstance.post("/auth/login/", details);
       localStorage.setItem("access_token", response.data.access_token);
       localStorage.setItem("refresh_token", response.data.refresh_token);
-      navigate('/')
+      navigate("/");
     } catch (err) {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
       const res = err.response;
       setErrors(res?.data?.non_field_errors);
     }
@@ -119,11 +121,16 @@ const Login = () => {
           </Link>
         </p>
 
-        <p className="text-sm text-center text-gray-600 mt-4">
-          <Link to="/ForgotPassword" className="text-purple-600 font-medium">
-            Forget Password
-          </Link>
-        </p>
+        <button
+          type="button"
+          className="text-sm text-center mt-4 text-purple-600 font-medium focus:outline-none"
+          onClick={() => setShowForgotModal(true)}
+        >
+          Forgot Password
+        </button>
+        {showForgotModal && (
+          <ForgotPassword onClose={() => setShowForgotModal(false)} />
+        )}
       </div>
 
       {/* Right Section - Local Image */}

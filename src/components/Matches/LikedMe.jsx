@@ -11,21 +11,36 @@ import ProfileCard from "../ProfileCard";
 
 const LikedMe = () => {
   const [profiles, setProfiles] = useState();
-  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [mutuals, setMutuals] = useState();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLikedUsers = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await axiosInstance.get('/matchmaking/users-who-liked-me');
-        console.log("Users who liked me:", response.data);
-        setProfiles(response.data);
+        const [likedMeRes, mutualsRes] = await Promise.all([
+          axiosInstance.get("/matchmaking/users-who-liked-me"),
+          axiosInstance.get("/matchmaking/mutual"),
+        ]);
+        setProfiles(likedMeRes.data);
+        setMutuals(mutualsRes.data);
       } catch (error) {
-        console.error("Failed to fetch liked users:", error);
+        setProfiles([]);
+        setMutuals([]);
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchLikedUsers();
+    fetchData();
   }, []);
+
+  // Build a set of mutual matched_profile ids for fast lookup
+  const mutualIds = mutuals?.map((m) => m.matched_profile?.id) || [];
+
+  // Filter out those who are mutual (i.e., I have liked them back)
+  const filteredProfiles = profiles?.filter(
+    (profile) => !mutualIds.includes(profile.profile?.id)
+  );
 
   return (
     <div>
@@ -36,10 +51,10 @@ const LikedMe = () => {
         A List of Potential Dates that liked you.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {!profiles ? (
+        {loading ? (
           <Loading data={profiles} />
         ) : (
-          profiles?.map((profile, index) => (
+          filteredProfiles?.map((profile, index) => (
             <ProfileCard
               key={index}
               profile={profile.profile}

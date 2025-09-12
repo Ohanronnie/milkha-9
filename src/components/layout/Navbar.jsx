@@ -114,7 +114,10 @@ const Navbar = () => {
           {/* Right Side (Dropdown Trigger) */}
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/Notifications" className="relative">
-              <FiBell className="text-xl cursor-pointer" />
+              <FiBell
+                className="text-xl md:text-2xl cursor-pointer"
+                style={{ minWidth: 24, minHeight: 24 }}
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] flex items-center justify-center">
                   {unreadCount > 99 ? "99+" : unreadCount}
