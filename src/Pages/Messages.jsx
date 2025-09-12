@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 
 // PopoverMenu component for chat header actions
 function PopoverMenu({ userId, targetUserId, onAction }) {
-  console.log("targetUserId", targetUserId);
+  // console.log("targetUserId", targetUserId);
   const [open, setOpen] = useState(false);
   const menuRef = useRef();
 
@@ -119,43 +119,47 @@ const NewMatches = ({ matches, onStartChat }) => {
   );
 };
 
-const ConversationItem = ({ conversation, isActive = false, onClick }) => (
-  <div
-    className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
-      isActive ? "bg-blue-50 border-r-2 border-blue-500" : ""
-    }`}
-    onClick={onClick}
-  >
-    <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-      <img
-        src={conversation.photo || "/default-avatar.png"}
-        // src={
-        //   conversation.other_user.photos?.find((v) => v.is_primary)?.photo ||
-        //   "/default-avatar.png"
-        // }
-        alt={conversation.other_user.first_name}
-        className="w-full h-full object-cover"
-      />
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900 truncate">
-          {conversation.other_user.first_name +
-            " " +
-            conversation.other_user.last_name}
-        </h3>
-        {conversation.unread_count > 0 && (
-          <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-            {conversation.unread_count}
-          </span>
-        )}
+const ConversationItem = ({ conversation, isActive = false, onClick }) => {
+  const isBlocked = conversation.is_blocked;
+  return (
+    <div
+      className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
+        isActive ? "bg-blue-50 border-r-2 border-blue-500" : ""
+      } ${isBlocked ? "opacity-60 bg-gray-100" : ""}`}
+      onClick={onClick}
+    >
+      <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border-2 border-gray-300">
+        <img
+          src={conversation.photo || "/default-avatar.png"}
+          alt={conversation.other_user.first_name}
+          className="w-full h-full object-cover"
+        />
       </div>
-      <p className="text-xs text-gray-500 truncate mt-1">
-        {conversation.last_message?.content || "Nothing here yet"}
-      </p>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-2">
+            {conversation.other_user.first_name +
+              " " +
+              conversation.other_user.last_name}
+            {isBlocked && (
+              <span className="ml-2 px-2 py-0.5 text-xs rounded bg-red-100 text-red-600 border border-red-200 font-semibold">
+                Blocked
+              </span>
+            )}
+          </h3>
+          {conversation.unread_count > 0 && (
+            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+              {conversation.unread_count}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 truncate mt-1">
+          {conversation.last_message?.content || "Nothing here yet"}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MessageBubble = ({ message }) => {
   if (!message) return null;
@@ -215,7 +219,7 @@ export default function MessagingInterface() {
     const fetchConversations = async () => {
       try {
         const response = await axiosInstance.get("/matchmaking/chat-rooms/");
-        console.log("Fetched conversations:", response.data);
+        // console.log("Fetched conversations:", response.data);
         setConversations(response.data);
       } catch (error) {
         console.error("Error fetching conversations:", error);
@@ -260,7 +264,7 @@ export default function MessagingInterface() {
       // Initial fetch
       setIsLoading(true);
       fetchMessages();
-      console.log("Selected conversation:", selectedConversation);
+      // console.log("Selected conversation:", selectedConversation);
 
       // Set up polling for messages
       pollingIntervalRef.current = setInterval(fetchMessages, 3000); // Poll every 3 seconds
@@ -422,6 +426,12 @@ export default function MessagingInterface() {
       >
         {selectedConversation ? (
           <div className="flex flex-col">
+            {/* Blocked Banner */}
+            {selectedConversation.is_blocked && (
+              <div className="bg-red-100 text-red-700 text-center py-2 px-4 font-semibold border-b border-red-200">
+                You have blocked this user. You cannot send or receive messages.
+              </div>
+            )}
             {/* Chat Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center">
@@ -519,34 +529,37 @@ export default function MessagingInterface() {
               )}
             </div>
             {/* Message Input */}
-            <div className="bg-gray-50 fixed md:w-[72.5%] w-full bottom-0 p-4 border-t border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Write your message..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && !isSending && handleSendMessage()
-                    }
-                    disabled={isSending}
-                  />
+            {/* Message Input - Hide if blocked */}
+            {!selectedConversation.is_blocked && (
+              <div className="bg-gray-50 fixed md:w-[72.5%] w-full bottom-0 p-4 border-t border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Write your message..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && !isSending && handleSendMessage()
+                      }
+                      disabled={isSending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!message.trim() || isSending}
+                    className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSending ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <FaPaperPlane className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!message.trim() || isSending}
-                  className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSending ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  ) : (
-                    <FaPaperPlane className="w-4 h-4" />
-                  )}
-                </button>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           /* No conversation selected - desktop only */

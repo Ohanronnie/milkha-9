@@ -102,7 +102,7 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-50 flex ">
       {/* Overlay with blur */}
       <div
         className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm transition-opacity duration-300"

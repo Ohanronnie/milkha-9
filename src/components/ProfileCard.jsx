@@ -8,7 +8,12 @@ import ProfileModal from "./Profile/ProfileModal";
 import { axiosInstance } from "../utils/axios";
 import toast from "react-hot-toast";
 
-const ProfileCard = ({ profile, optionalPhoto, isLiked, compatibilityScore }) => {
+const ProfileCard = ({
+  profile,
+  optionalPhoto,
+  isLiked,
+  compatibilityScore,
+}) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [liked, setLiked] = useState(!!isLiked);
   const [mutual, setMutual] = useState(false);
@@ -176,17 +181,3 @@ const ProfileCard = ({ profile, optionalPhoto, isLiked, compatibilityScore }) =>
 };
 
 export default ProfileCard;
-// <div className="inline-flex w-full gap-2">
-//   <button
-//     onClick={() => setShowProfileModal(true)}
-//     className="w-8/12 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white text-sm font-bold py-2 rounded-lg shadow transition"
-//   >
-//     VIEW PROFILE
-//   </button>
-//   <button
-//     onClick={handleMessageClick}
-//     className="w-4/12 px-6 text-purple-500 border border-purple-500 text-xs font-semibold py-2 rounded-md flex items-center justify-center"
-//   >
-//     <LuMessagesSquare className="text-xl" />
-//   </button>
-// </div>;

@@ -2,6 +2,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../utils/axios";
+import toast from "react-hot-toast";
 
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +73,7 @@ const Settings = () => {
       setNewPassword("");
       setConfirmNewPassword("");
       setPasswordError(null);
-      alert("Password changed successfully!");
+      toast.success("Password changed successfully!");
     } catch (error) {
       const response = error?.response;
       setPasswordError(
@@ -88,8 +89,7 @@ const Settings = () => {
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
-    // Dummy API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await axiosInstance.delete("/auth/delete-account/");
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     setDeleting(false);

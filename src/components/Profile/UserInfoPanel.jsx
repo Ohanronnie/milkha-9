@@ -192,20 +192,16 @@ function UserInfoPanel({ userDetails }) {
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {(typeof userDetails?.interests === "string" &&
-          userDetails?.interests.length > 0
-            ? userDetails.interests
-                .split(",")
-                .map((h) => h.trim())
-                .filter(Boolean)
+        <div className="flex flex-wrap justify-center gap-2">
+          {(userDetails?.interests
+            ? userDetails.interests.match(/[A-Z][a-z]*/g)
             : []
           ).map((item, idx) => (
             <span
               key={idx}
               className={
                 getHobbyColor(item) +
-                " border text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1 shadow-sm border-purple-300"
+                " text-xs font-medium px-3 py-1 rounded-full flex items-center shadow-sm mr-2 mb-2"
               }
             >
               <FaBolt className="mr-1" /> {item}
