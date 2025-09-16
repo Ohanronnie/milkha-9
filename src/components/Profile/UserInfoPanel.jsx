@@ -12,7 +12,7 @@ function UserInfoPanel({ userDetails }) {
   const [showBioModal, setShowBioModal] = useState(false);
   const [interests, setInterests] = useState(userDetails?.interests || "");
   const [showHobbiesModal, setShowHobbiesModal] = useState(false);
-
+console.log(userDetails)
   const [hobbySearch, setHobbySearch] = useState("");
   const hobbiesList = [
     "Reading",
@@ -321,7 +321,9 @@ function UserInfoPanel({ userDetails }) {
                 onChange={(e) => setMaritalStatus(e.target.value)}
               />
             ) : (
-              <p className="font-medium">{maritalStatus}</p>
+              <p className="font-medium">
+                {maritalStatus || userDetails?.["marital_status"]}
+              </p>
             )}
           </div>
           <div>
@@ -335,7 +337,10 @@ function UserInfoPanel({ userDetails }) {
                 onChange={(e) => setAcademicQualification(e.target.value)}
               />
             ) : (
-              <p className="font-medium">{academicQualification}</p>
+              <p className="font-medium">
+                {academicQualification ||
+                  userDetails?.["academic_qualification"]}
+              </p>
             )}
           </div>
         </div>

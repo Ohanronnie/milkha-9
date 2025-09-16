@@ -33,7 +33,8 @@ const Dashboard = () => {
         console.log("shortlisted",shortlisted.data);
 
       } catch (error) {
-        toast.error("Error occurred somewhere, reload page");
+        console.log("Can it be here?");
+       // toast.error("Error occurred somewhere, reload page");
       }
     };
     fetchAllData();

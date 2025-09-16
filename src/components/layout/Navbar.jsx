@@ -35,7 +35,7 @@ const Navbar = () => {
       .then(({ data }) => {
         setUserDetails(data);
       })
-      .catch((e) => toast.error("error occurred somewhere"));
+      .catch((e) => null /*toast.error("error occurred somewhere")*/);
   }, []);
 
   useEffect(() => {

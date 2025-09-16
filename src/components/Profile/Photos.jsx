@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiUpload, FiTrash2 } from "react-icons/fi";
+import { FiUpload, FiTrash2, FiBookmark } from "react-icons/fi";
 import { axiosInstance } from "../../utils/axios";
 import toast from "react-hot-toast";
 
@@ -44,11 +44,15 @@ export default function PhotoUploader({ userDetails }) {
     newImages[index] = null;
     setImages(newImages);
     axiosInstance
-      .delete("/profile/photos/delete/" + index + "/")
+      .delete("/profile/photos/delete/" + (index+1) + "/")
       .then((_) => toast.success("Image deleted successfully"))
       .catch((error) => toast.error("Error occurred retry"));
   };
-
+  const makeProfilePics = (index) => {
+    axiosInstance.post("/profile/photos/set-primary/"+index, {
+      is_primary: true
+    }).then(e => toast.success("Image successfully sent as profile picture")).catch(e => toast.error("Error occured when setting as profile"))
+  }
   return (
     <div className="space-y-4 lg:px-12 px-4 py-12">
       <h3 className="text-sm font-semibold text-gray-700">Photos</h3>
@@ -66,6 +70,13 @@ export default function PhotoUploader({ userDetails }) {
                   alt={`Uploaded ${index}`}
                   className="object-cover w-full h-full"
                 />
+                
+                <button
+                  onClick={() => makeProfilePics(index)}
+                  className="absolute top-2 left-2 bg-white p-1 rounded-full shadow text-red-500"
+                >
+                  <FiBookmark className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => handleDelete(index)}
                   className="absolute top-2 right-2 bg-white p-1 rounded-full shadow text-red-500"

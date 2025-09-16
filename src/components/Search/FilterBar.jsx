@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaMapMarkerAlt, FaStar, FaHeart, FaChevronDown, FaSearch } from "react-icons/fa";
+import { useCountries } from "../../utils/countries";
 
 export default function FilterBar({ filters, setFilters }) {
   const [selectedFilters, setSelectedFilters] = useState({
@@ -14,6 +15,10 @@ export default function FilterBar({ filters, setFilters }) {
 
   const [sortBy, setSortBy] = useState("Top matches");
   const [searchInput, setSearchInput] = useState(filters?.name_search || ""); // track input
+
+  // country modal state
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
 
   // keep local input in sync with external filters.fullname
   useEffect(() => {
@@ -39,6 +44,9 @@ export default function FilterBar({ filters, setFilters }) {
       name_search: trimmed !== "" ? trimmed : undefined,
     }));
   };
+
+  // load countries for modal
+  const { countries: allCountries, loading: countriesLoading } = useCountries({ autoFetch: true });
 
   return (
     <div className="relative">
@@ -131,47 +139,33 @@ export default function FilterBar({ filters, setFilters }) {
       <div className="px-4 md:px-12 mt-2 space-y-4">
         {selectedFilters.location && (
           <PopupCard title="Location">
-            {["Abu Dhabi", "Dubai"].map((loc) => (
-              <label key={loc} className="block text-sm">
-                <input
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      emirate: loc,
-                    }))
-                  }
-                  type="radio"
-                  checked={filters?.emirate === loc}
-                  name="location"
-                  className="mr-2"
-                />{" "}
-                {loc}
-              </label>
-            ))}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm">Selected: <span className="font-medium">{filters?.emirate || 'None'}</span></p>
+              <button
+                onClick={() => setShowCountryModal(true)}
+                className="text-xs bg-purple-600 text-white px-3 py-1 rounded"
+              >
+                Choose Country
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">Or open the picker to select a different country.</p>
           </PopupCard>
         )}
 
-        {/* {selectedFilters.hobbies && (
-          <PopupCard title="Select Hobbies">
-            <div className="flex flex-wrap gap-2">
-              {["Reading", "Cooking", "Music", "Yoga", "Travel", "Fitness"].map(
-                (hobby) => (
-                  <span
-                    key={hobby}
-                    onClick={() =>
-                      setFilters((prev) => ({ ...prev, interests: hobby }))
-                    }
-                    className={`text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full cursor-pointer ${
-                      filters?.interests === hobby && "opacity-50"
-                    }`}
-                  >
-                    {hobby}
-                  </span>
-                )
-              )}
-            </div>
-          </PopupCard>
-        )} */}
+        {showCountryModal && (
+          <CountrySelectModal
+            isOpen={showCountryModal}
+            onClose={() => setShowCountryModal(false)}
+            countries={allCountries || []}
+            loading={countriesLoading}
+            query={countryQuery}
+            setQuery={setCountryQuery}
+            onSelect={(countryName) => {
+              setFilters((prev) => ({ ...prev, emirate: countryName }));
+              setShowCountryModal(false);
+            }}
+          />
+        )}
 
         {selectedFilters.age && (
           <PopupCard title="Select Age Range">
@@ -261,3 +255,40 @@ const PopupCard = ({ title, children }) => (
     {children}
   </div>
 );
+
+// Country selection modal (inline component)
+const CountrySelectModal = ({ isOpen, onClose, countries, loading, query, setQuery, onSelect }) => {
+  if (!isOpen) return null;
+  const filtered = (countries || []).filter((c) => c.name.toLowerCase().includes((query || '').toLowerCase()));
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">
+      <div className="absolute inset-0 bg-black opacity-40" onClick={onClose} />
+      <div className="bg-white rounded-md shadow-lg z-10 w-full max-w-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium">Select Country</h3>
+          <button onClick={onClose} className="text-sm text-gray-600">Close</button>
+        </div>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search country..."
+          className="w-full border rounded px-3 py-2 mb-3"
+        />
+        <div className="max-h-60 overflow-auto">
+          {loading && <p className="text-sm text-gray-500">Loading countries...</p>}
+          {!loading && filtered.length === 0 && <p className="text-sm text-gray-500">No countries found.</p>}
+          {!loading && filtered.map((c) => (
+            <button
+              key={c.code || c.name}
+              onClick={() => onSelect(c.name)}
+              className="w-full text-left px-2 py-2 hover:bg-gray-100 flex items-center gap-2"
+            >
+              {c.flag ? <img src={c.flag} alt="flag" className="w-5 h-4 object-cover" /> : null}
+              <span className="text-sm">{c.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

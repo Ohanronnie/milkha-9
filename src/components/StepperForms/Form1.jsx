@@ -1,9 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaUser, FaCalendarAlt } from "react-icons/fa";
 import Select from "react-select";
-import countryList from "react-select-country-list";
-import { State, Country } from "country-state-city";
+import { useCountries } from "../../utils/countries";
 
 const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
   const handleChange = (field, value) =>
@@ -94,19 +93,45 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
 
     return true;
   };
-  const countryOptions = useMemo(() => countryList().getData(), []);
+  // useCountries hook provides countries list and getStates helper
+  const {
+    countries,
+    getStates,
+    loading: countriesLoading,
+    error: countriesError,
+  } = useCountries({ autoFetch: true });
+
+  // react-select expects { label, value }
+  const countryOptions = useMemo(() => {
+    return (countries || []).map((c) => ({
+      value: c.name,
+      label: c.name,
+      code: c.code,
+    }));
+  }, [countries]);
+
   const selectedCountry = countryOptions.find(
     (option) => option.label === details.country_of_residence
   );
 
-  const stateOptions = useMemo(() => {
-    if (!selectedCountry) return [];
-    // country-state-city expects ISO code, react-select-country-list gives value as ISO code
-    return State.getStatesOfCountry(selectedCountry.value).map((state) => ({
-      value: state.name,
-      label: state.name,
-    }));
-  }, [selectedCountry]);
+  const [stateOptions, setStateOptions] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStates = async () => {
+      if (!selectedCountry) {
+        if (mounted) setStateOptions([]);
+        return;
+      }
+      const states = await getStates(selectedCountry.label);
+      if (!mounted) return;
+      setStateOptions((states || []).map((s) => ({ value: s, label: s })));
+    };
+    loadStates();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCountry, getStates]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 bg-gray-50 min-h-screen">
@@ -287,7 +312,7 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
             }
             className="w-full"
             classNamePrefix="react-select"
-            placeholder="Select country"
+           
           />
         </div>
         {selectedCountry && (
@@ -303,8 +328,7 @@ const PersonalInfoForm = ({ details, setDetails, next, prev }) => {
               onChange={(option) => handleChange("emirate", option.value)}
               className="w-full"
               classNamePrefix="react-select"
-              placeholder="Select state/region"
-              isDisabled={stateOptions.length === 0}
+           
             />
           </div>
         )}

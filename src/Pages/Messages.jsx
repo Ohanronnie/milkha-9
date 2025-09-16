@@ -401,7 +401,7 @@ export default function MessagingInterface() {
         <div className="flex-1 overflow-y-auto">
           {conversations.length > 0 ? (
             conversations
-              .filter((conversation) => conversation.last_message) // Only show if there's a message
+              .filter((conversation) => !conversation.is_blocked || conversation.last_message) // Only show if there's a message
               .map((conversation) => (
                 <ConversationItem
                   key={conversation.id}
@@ -485,6 +485,10 @@ export default function MessagingInterface() {
                       toast.success("User unliked.");
                     } else if (action === "block") {
                       toast.success("User blocked.");
+                      setConversations((prev) =>
+                        prev.filter((a) => a.other_user?.user !== selectedConversation.other_user.user)
+                      );
+                      handleBackToMessages();
                     } else if (action === "report") {
                       toast.success("User reported.");
                     }

@@ -61,7 +61,9 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
   const [profile, setProfileData] = useState(null);
   const [userId, setUserId] = useState(null);
   const hasRun = useRef(false);
+  const [liked, setLiked] = useState(false);
 
+  const [shortlisted, setShortlisted] = useState(false);
   useEffect(() => {
     if (hasRun.current) return;
     hasRun.current = true;
@@ -86,14 +88,16 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
       if (type === "like") {
         try {
           await axiosInstance.post("/matchmaking/like/" + userId);
-          toast.success("User liked successfully!");
+          toast.success(!liked ? `User liked successfully!` : "User unliked successfully");
+          setLiked(!liked)
         } catch (error) {
           toast.error("Error liking user, retry later!");
         }
       } else {
         try {
+          setShortlisted(!shortlisted)
           await axiosInstance.post("/matchmaking/shortlist/" + userId);
-          toast.success("User shortlisted successfully!");
+          toast.success(!shortlisted  ?"User shortlisted successfully!":"User removed from shortlist");
         } catch (error) {
           toast.error("Error shortlisting user, retry later!");
         }
@@ -164,14 +168,14 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
                   onClick={likeOrShortlist("like")}
                   className="bg-pink-100 text-pink-600 px-5 py-2 rounded-full flex items-center gap-2 text-base font-semibold hover:bg-pink-200 active:scale-95 shadow transition"
                 >
-                  <FaHeart /> Like
+                  <FaHeart /> {liked ? "Unlike" : "Like"}
                 </button>
 
                 <button
                   onClick={likeOrShortlist("shortlist")}
                   className="bg-blue-100 text-blue-600 px-5 py-2 rounded-full flex items-center gap-2 text-base font-semibold hover:bg-blue-200 active:scale-95 shadow transition"
                 >
-                  <FaStar /> Shortlist
+                  <FaStar /> {shortlisted ? "Unshortlist" :"Shortist"}
                 </button>
               </div>
             </div>
