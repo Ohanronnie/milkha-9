@@ -16,18 +16,18 @@ const Search = () => {
   useEffect(() => {
     (async function () {
       if (!filters) return;
-
-      const {
+console.log(filters)
+      let {
         age,
         interests,
-        country,
+      //  country,
         marital_status,
         religion,
         emirate,
         name_search, // include fullname from search input
         email
       } = filters;
-
+let country = emirate;
       const initParams = {
         age_min: age?.split("-")[0],
         age_max: age?.split("-")[1],
@@ -35,7 +35,7 @@ const Search = () => {
         country,
         marital_status,
         religion,
-        emirate,
+       // emirate,
         name_search,
         email
       };
