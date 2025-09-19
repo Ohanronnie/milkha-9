@@ -12,6 +12,7 @@ import {
 import { axiosInstance } from "../../utils/axios";
 import toast from "react-hot-toast";
 
+// Reusable Section
 const Section = ({ title, icon, children, defaultOpen = false }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -31,12 +32,15 @@ const Section = ({ title, icon, children, defaultOpen = false }) => {
         />
       </button>
       {open && (
-        <div className="mt-2 text-sm text-gray-700 animate-fadeIn">{children}</div>
+        <div className="mt-2 text-sm text-gray-700 animate-fadeIn">
+          {children}
+        </div>
       )}
     </div>
   );
 };
 
+// Skeleton Loader
 const Skeleton = () => (
   <div className="p-8 animate-pulse">
     <div className="flex flex-col items-center">
@@ -56,21 +60,41 @@ const Skeleton = () => (
   </div>
 );
 
+// Image Modal for full-size preview
+const ImageModal = ({ src, onClose }) => {
+  if (!src) return null;
+  return (
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-70">
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 text-white text-3xl font-bold"
+      >
+        ✕
+      </button>
+      <img
+        src={src}
+        alt="Preview"
+        className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-lg"
+      />
+    </div>
+  );
+};
+
 const FullProfileModal = ({ profile: profileData, onClose }) => {
   const [show, setShow] = useState(false);
   const [profile, setProfileData] = useState(null);
   const [userId, setUserId] = useState(null);
   const hasRun = useRef(false);
   const [liked, setLiked] = useState(false);
-
   const [shortlisted, setShortlisted] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // 👈 for image modal
+
   useEffect(() => {
     if (hasRun.current) return;
     hasRun.current = true;
     setTimeout(() => setShow(true), 20);
 
     if (!profileData) return;
-
     axiosInstance
       .get("/profile/" + profileData?.user)
       .then(({ data }) => {
@@ -88,26 +112,35 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
       if (type === "like") {
         try {
           await axiosInstance.post("/matchmaking/like/" + userId);
-          toast.success(!liked ? `User liked successfully!` : "User unliked successfully");
-          setLiked(!liked)
-        } catch (error) {
+          toast.success(
+            !liked ? `User liked successfully!` : "User unliked successfully"
+          );
+          setLiked(!liked);
+        } catch {
           toast.error("Error liking user, retry later!");
         }
       } else {
         try {
-          setShortlisted(!shortlisted)
+          setShortlisted(!shortlisted);
           await axiosInstance.post("/matchmaking/shortlist/" + userId);
-          toast.success(!shortlisted  ?"User shortlisted successfully!":"User removed from shortlist");
-        } catch (error) {
+          toast.success(
+            !shortlisted
+              ? "User shortlisted successfully!"
+              : "User removed from shortlist"
+          );
+        } catch {
           toast.error("Error shortlisting user, retry later!");
         }
       }
     };
   };
 
+  const mainPhoto = profile?.photos?.find((a) => a.is_primary)?.photo;
+  const otherPhotos = profile?.photos?.filter((a) => !a.is_primary) || [];
+
   return (
     <div className="fixed inset-0 z-50 flex ">
-      {/* Overlay with blur */}
+      {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
@@ -120,13 +153,11 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
         }`}
         style={{ marginLeft: "auto" }}
       >
-        {/* Scrollable Container */}
         <div className="overflow-y-auto h-full pb-16 animate-fadeIn">
           {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-5 text-2xl text-purple-700 hover:text-purple-900 bg-white rounded-full shadow-lg p-2 z-10 border border-purple-100 transition"
-            aria-label="Close"
           >
             ✕
           </button>
@@ -136,23 +167,19 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
             <Skeleton />
           ) : (
             <div className="flex flex-col items-center p-8 pt-12">
+              {/* Main Photo */}
               <div className="relative mb-4">
                 <img
-                  src={profile?.photos?.find((a) => a.is_primary)?.photo}
+                  src={mainPhoto}
                   alt={profile?.first_name + " " + profile?.last_name}
                   className="rounded-2xl w-40 h-48 object-cover shadow-md border-4 border-purple-100"
                 />
-                {/* Compatibility Progress Bar */}
-                <div className="absolute top-2 right-[-10px] flex flex-col items-end">
-                  <span className="bg-purple-500 text-white text-xs px-3 py-1 rounded-full shadow mb-1">
-                    75% COMPATIBLE
-                  </span>
-                  {/* <div className="w-24 h-2 bg-purple-200 rounded-full overflow-hidden">
-                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: "75%" }} />
-                  </div> */}
-                </div>
               </div>
 
+              {/* Thumbnails */}
+             
+
+              {/* Name + Info */}
               <h2 className="text-2xl font-bold text-gray-800 mb-1">
                 {profile?.first_name + " " + profile?.last_name}
               </h2>
@@ -163,6 +190,7 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
                 {profile.emirate}
               </p>
 
+              {/* Action buttons */}
               <div className="flex gap-4 mb-4">
                 <button
                   onClick={likeOrShortlist("like")}
@@ -175,13 +203,12 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
                   onClick={likeOrShortlist("shortlist")}
                   className="bg-blue-100 text-blue-600 px-5 py-2 rounded-full flex items-center gap-2 text-base font-semibold hover:bg-blue-200 active:scale-95 shadow transition"
                 >
-                  <FaStar /> {shortlisted ? "Unshortlist" :"Shortist"}
+                  <FaStar /> {shortlisted ? "Unshortlist" : "Shortlist"}
                 </button>
               </div>
             </div>
           )}
-
-          {/* Content */}
+          {/* Content Sections */}
           {profile && (
             <div className="px-8 pb-10">
               <Section
@@ -211,6 +238,26 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
                 </div>
               </Section>
 
+              {/* 👇 New Photos Section */}
+              {otherPhotos.length > 0 && (
+                <Section
+                  title="More Photos"
+                  icon={<FaUser className="text-purple-400" />}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {otherPhotos.map((p, idx) => (
+                      <img
+                        key={idx}
+                        src={p.photo}
+                        alt={`Photo ${idx}`}
+                        onClick={() => setSelectedImage(p.photo)}
+                        className="w-20 h-20 rounded-md object-cover cursor-pointer border border-gray-200 hover:opacity-80 transition"
+                      />
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               <Section
                 title="Personal Information"
                 icon={<FaUser className="text-purple-400" />}
@@ -235,13 +282,15 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
                 </p>
               </Section>
 
-              {/* Spacer for scroll */}
               <div className="h-12"></div>
             </div>
           )}
         </div>
       </div>
-      {/* Animations */}
+
+      {/* Image Modal */}
+      <ImageModal src={selectedImage} onClose={() => setSelectedImage(null)} />
+
       <style>
         {`
           .animate-fadeIn {
@@ -258,4 +307,3 @@ const FullProfileModal = ({ profile: profileData, onClose }) => {
 };
 
 export default FullProfileModal;
-// ...existing code...
