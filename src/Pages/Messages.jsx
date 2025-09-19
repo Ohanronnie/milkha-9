@@ -11,6 +11,126 @@ import {
 import { axiosInstance } from "../utils/axios";
 import toast from "react-hot-toast";
 
+const ReportModal = ({ isOpen, onClose, userName, onSend }) => {
+  const [reason, setReason] = useState("");
+  const [proofPhotos, setProofPhotos] = useState([]); // stores File objects
+  const [reportType, setReportType] = useState("");
+  if (!isOpen) return null;
+
+  const handleFileChange = (e) => {
+    console.log("called");
+    const files = Array.from(e.target.files);
+    console.log(files);
+    // limit to 5 files max
+    const newFiles = [...proofPhotos, ...files].slice(0, 5);
+    setProofPhotos(newFiles);
+  };
+
+  const handleRemovePhoto = (index) => {
+    setProofPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSend = () => {
+    if (onSend) {
+      const formData = new FormData();
+      formData.append("report_type", reportType.toLowerCase());
+      formData.append("description", reason);
+      for (let i = 0; i < proofPhotos.length; i++) {
+        formData.append(`proof_photo_${i + 1}`, proofPhotos[i]);
+      }
+      onSend({ formData });
+    }
+    setReason("");
+    setProofPhotos([]);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black opacity-40" onClick={onClose} />
+      <div className="bg-white rounded-md shadow-lg z-10 w-full max-w-md p-6 relative">
+        <h2 className="text-lg font-bold mb-2">Report user ({userName})</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Please let us know what you consider inappropriate about this
+          person...
+        </p>
+
+        <select
+          value={reportType}
+          onChange={(e) => setReportType(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-4"
+        >
+          <option value="" disabled>
+            Select a report type...
+          </option>
+          {["Inappropriate", "Fake", "Harassment", "Spam", "Other"].map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
+
+        <input
+          placeholder="Brief description"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-4"
+        />
+        {/* Upload Proof Photos */}
+        <div className="mb-4 mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Upload Proof Photos (max 5)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="w-full text-sm text-gray-600"
+          />
+          {proofPhotos.length > 0 && (
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {proofPhotos.map((file, index) => (
+                <div
+                  key={index}
+                  className="relative w-16 h-16 border rounded overflow-hidden"
+                >
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`Proof ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePhoto(index)}
+                    className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded bg-gray-200 text-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            className="px-4 py-2 rounded bg-purple-600 text-white"
+            disabled={!reason.trim()}
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 // PopoverMenu component for chat header actions
 function PopoverMenu({ userId, targetUserId, onAction }) {
   // console.log("targetUserId", targetUserId);
@@ -37,7 +157,7 @@ function PopoverMenu({ userId, targetUserId, onAction }) {
         await axiosInstance.post(`/matchmaking/block/${userId}/`);
         onAction && onAction("block");
       } else if (type === "report") {
-        await axiosInstance.post(`/matchmaking/report/${userId}/`);
+        //await axiosInstance.post(`/matchmaking/report/${userId}/`);
         onAction && onAction("report");
       }
     } catch (err) {
@@ -201,6 +321,7 @@ export default function MessagingInterface() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const conversationsPollingIntervalRef = useRef(null);
@@ -401,7 +522,10 @@ export default function MessagingInterface() {
         <div className="flex-1 overflow-y-auto">
           {conversations.length > 0 ? (
             conversations
-              .filter((conversation) => !conversation.is_blocked || conversation.last_message) // Only show if there's a message
+              .filter(
+                (conversation) =>
+                  !conversation.is_blocked || conversation.last_message
+              ) // Only show if there's a message
               .map((conversation) => (
                 <ConversationItem
                   key={conversation.id}
@@ -486,11 +610,16 @@ export default function MessagingInterface() {
                     } else if (action === "block") {
                       toast.success("User blocked.");
                       setConversations((prev) =>
-                        prev.filter((a) => a.other_user?.user !== selectedConversation.other_user.user)
+                        prev.filter(
+                          (a) =>
+                            a.other_user?.user !==
+                            selectedConversation.other_user.user
+                        )
                       );
                       handleBackToMessages();
                     } else if (action === "report") {
-                      toast.success("User reported.");
+                      setIsReportModalOpen(true);
+                    //  toast.success("User reported.");
                     }
                   }}
                 />
@@ -578,6 +707,31 @@ export default function MessagingInterface() {
           </div>
         )}
       </div>
+      {/* Report Modal - Always render but control visibility with isOpen */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        userName={
+          selectedConversation?.other_user?.first_name +
+          " " +
+          selectedConversation?.other_user?.last_name
+        }
+        onSend={async ({ formData }) => {
+          try {
+            setIsReportModalOpen(false);
+            await axiosInstance.post(
+              `/matchmaking/report/${selectedConversation?.other_user?.user}/`,
+              formData
+            );
+            toast.success("Report sent successfully.");
+          } catch (error) {
+            console.error("Error sending report:", error);
+            toast.error("Failed to send report. Please try again.");
+          } finally {
+            setIsReportModalOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { FaMapMarkerAlt, FaStar, FaHeart, FaChevronDown, FaSearch } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaStar,
+  FaHeart,
+  FaChevronDown,
+  FaSearch,
+} from "react-icons/fa";
 import { useCountries } from "../../utils/countries";
 
 export default function FilterBar({ filters, setFilters }) {
@@ -46,7 +52,9 @@ export default function FilterBar({ filters, setFilters }) {
   };
 
   // load countries for modal
-  const { countries: allCountries, loading: countriesLoading } = useCountries({ autoFetch: true });
+  const { countries: allCountries, loading: countriesLoading } = useCountries({
+    autoFetch: true,
+  });
 
   return (
     <div className="relative">
@@ -140,7 +148,12 @@ export default function FilterBar({ filters, setFilters }) {
         {selectedFilters.location && (
           <PopupCard title="Location">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm">Selected: <span className="font-medium">{filters?.emirate || 'None'}</span></p>
+              <p className="text-sm">
+                Selected:{" "}
+                <span className="font-medium">
+                  {filters?.emirate || "None"}
+                </span>
+              </p>
               <button
                 onClick={() => setShowCountryModal(true)}
                 className="text-xs bg-purple-600 text-white px-3 py-1 rounded"
@@ -148,7 +161,9 @@ export default function FilterBar({ filters, setFilters }) {
                 Choose Country
               </button>
             </div>
-            <p className="text-xs text-gray-500">Or open the picker to select a different country.</p>
+            <p className="text-xs text-gray-500">
+              Or open the picker to select a different country.
+            </p>
           </PopupCard>
         )}
 
@@ -257,16 +272,28 @@ const PopupCard = ({ title, children }) => (
 );
 
 // Country selection modal (inline component)
-const CountrySelectModal = ({ isOpen, onClose, countries, loading, query, setQuery, onSelect }) => {
+const CountrySelectModal = ({
+  isOpen,
+  onClose,
+  countries,
+  loading,
+  query,
+  setQuery,
+  onSelect,
+}) => {
   if (!isOpen) return null;
-  const filtered = (countries || []).filter((c) => c.name.toLowerCase().includes((query || '').toLowerCase()));
+  const filtered = (countries || []).filter((c) =>
+    c.name.toLowerCase().includes((query || "").toLowerCase())
+  );
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">
       <div className="absolute inset-0 bg-black opacity-40" onClick={onClose} />
       <div className="bg-white rounded-md shadow-lg z-10 w-full max-w-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium">Select Country</h3>
-          <button onClick={onClose} className="text-sm text-gray-600">Close</button>
+          <button onClick={onClose} className="text-sm text-gray-600">
+            Close
+          </button>
         </div>
         <input
           value={query}
@@ -275,18 +302,29 @@ const CountrySelectModal = ({ isOpen, onClose, countries, loading, query, setQue
           className="w-full border rounded px-3 py-2 mb-3"
         />
         <div className="max-h-60 overflow-auto">
-          {loading && <p className="text-sm text-gray-500">Loading countries...</p>}
-          {!loading && filtered.length === 0 && <p className="text-sm text-gray-500">No countries found.</p>}
-          {!loading && filtered.map((c) => (
-            <button
-              key={c.code || c.name}
-              onClick={() => onSelect(c.name)}
-              className="w-full text-left px-2 py-2 hover:bg-gray-100 flex items-center gap-2"
-            >
-              {c.flag ? <img src={c.flag} alt="flag" className="w-5 h-4 object-cover" /> : null}
-              <span className="text-sm">{c.name}</span>
-            </button>
-          ))}
+          {loading && (
+            <p className="text-sm text-gray-500">Loading countries...</p>
+          )}
+          {!loading && filtered.length === 0 && (
+            <p className="text-sm text-gray-500">No countries found.</p>
+          )}
+          {!loading &&
+            filtered.map((c) => (
+              <button
+                key={c.code || c.name}
+                onClick={() => onSelect(c.name)}
+                className="w-full text-left px-2 py-2 hover:bg-gray-100 flex items-center gap-2"
+              >
+                {c.flag ? (
+                  <img
+                    src={c.flag}
+                    alt="flag"
+                    className="w-5 h-4 object-cover"
+                  />
+                ) : null}
+                <span className="text-sm">{c.name}</span>
+              </button>
+            ))}
         </div>
       </div>
     </div>

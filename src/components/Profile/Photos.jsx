@@ -44,7 +44,7 @@ export default function PhotoUploader({ userDetails }) {
     newImages[index] = null;
     setImages(newImages);
     axiosInstance
-      .delete("/profile/photos/delete/" + (index+1) + "/")
+      .delete("/profile/photos/delete/" + (index) + "/")
       .then((_) => toast.success("Image deleted successfully"))
       .catch((error) => toast.error("Error occurred retry"));
   };

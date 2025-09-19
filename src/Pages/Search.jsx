@@ -16,18 +16,17 @@ const Search = () => {
   useEffect(() => {
     (async function () {
       if (!filters) return;
-console.log(filters)
       let {
         age,
         interests,
-      //  country,
+        //  country,
         marital_status,
         religion,
         emirate,
         name_search, // include fullname from search input
-        email
+        email,
       } = filters;
-let country = emirate;
+      let country = emirate;
       const initParams = {
         age_min: age?.split("-")[0],
         age_max: age?.split("-")[1],
@@ -35,18 +34,25 @@ let country = emirate;
         country,
         marital_status,
         religion,
-       // emirate,
+        // emirate,
         name_search,
-        email
+        email,
       };
 
-      const filtered = Object.entries(initParams).reduce((acc, [key, value]) => {
-        // exclude undefined/null/empty string values
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-          acc[key] = value;
-        }
-        return acc;
-      }, {});
+      const filtered = Object.entries(initParams).reduce(
+        (acc, [key, value]) => {
+          // exclude undefined/null/empty string values
+          if (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+          ) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {}
+      );
 
       try {
         const qs = new URLSearchParams(filtered).toString();
